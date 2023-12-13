@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".FilterFragment"
+    android:background="@color/teal_200"
+    android:backgroundTint="@color/blue"
+    android:theme="@style/Theme.App">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="30dp"
+        app:cardCornerRadius="30dp"
+        android:elevation="20dp"
+        app:cardBackgroundColor="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+
+            <TextView
+                android:layout_width="309dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="36dp"
+                android:layout_marginBottom="20dp"
+                android:fontFamily="@font/carter_one"
+                android:text="Filter Location"
+                android:textAlignment="center"
+                android:textColor="@color/blue"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintVertical_bias="0.116" />
+
+            <SearchView
+                android:id="@+id/itemListSearchView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/border_top_background"
+                android:iconifiedByDefault="true"
+                android:queryHint="Location Name" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:background="@drawable/border_bottom_background">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Between: "
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="5dp"/>
+
+                <Button
+                    android:id="@+id/datePickerFilterBetween"
+                    style="@style/Widget.AppCompat.Spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="JAN 01 2023"
+                    android:textColor="@color/darker_gray"
+                    android:textSize="30sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:translationY="-2sp"
+                android:background="@drawable/border_bottom_background">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="and           "
+                    android:textAlignment="viewStart"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/datePickerFilterAnd"
+                    style="@style/Widget.AppCompat.Spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="DEC 01 2024"
+                    android:textColor="@color/darker_gray"
+                    android:textSize="30sp" />
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/itemListView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>

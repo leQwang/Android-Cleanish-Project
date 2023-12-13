@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "708585699823",
+    "project_id": "cleanish-dcc6c",
+    "storage_bucket": "cleanish-dcc6c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:708585699823:android:2a746a06e6c675bf4ade1a",
+        "android_client_info": {
+          "package_name": "com.example.cleanish"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqDnNDdzBarbvw581W75HcAfH-NO1aQYA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
