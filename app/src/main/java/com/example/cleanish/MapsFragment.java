@@ -4,13 +4,16 @@ import static android.content.ContentValues.TAG;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,26 +25,40 @@ import android.widget.Toast;
 
 import com.example.cleanish.databinding.ActivityMainBinding;
 import com.example.cleanish.model.Location;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.maps.android.SphericalUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class MapsFragment extends Fragment {
+    private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    private static final long UPDATE_INTERVAL = 20*1000 ;
+    private static final long FASTEST_INTERVAL = 10*1000 ;
+    protected FusedLocationProviderClient client;
+    protected LocationRequest mLocationRequest;
     private GoogleMap mMap;
+    private LatLng currentUserLocation;
 
     private OnMapReadyCallback callback = new OnMapReadyCallback() {
 
@@ -60,6 +77,9 @@ public class MapsFragment extends Fragment {
 //            LatLng sydney = new LatLng(-34, 151);
 //            googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 //            googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+            requestPermission();
+            client = LocationServices.getFusedLocationProviderClient(getActivity());
+            Log.d(TAG, "Current client: " + client);
             mMap = googleMap;
 
             mMap.getUiSettings().setZoomControlsEnabled(true);
@@ -74,12 +94,14 @@ public class MapsFragment extends Fragment {
                     startActivity(intent);
                 }
             });
+            startLocationUpdate();
+
             new LoadLocationsTask().execute();
         }
     };
 
 //    @Override
-//    protected void onResume(){
+//    public void onResume() {
 //        super.onResume();
 //        new LoadLocationsTask().execute();
 //    }
@@ -100,6 +122,47 @@ public class MapsFragment extends Fragment {
         if (mapFragment != null) {
             mapFragment.getMapAsync(callback);
         }
+    }
+
+    private void requestPermission(){
+        Log.d(TAG, "Requesting Permission");
+        ActivityCompat.requestPermissions(getActivity(), new String[]{
+                android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
+    }
+
+    @SuppressLint({"MissingPermission", "RestrictedApi"})
+    private void startLocationUpdate(){
+        Log.d(TAG, "Start Location Update");
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+        client.requestLocationUpdates(mLocationRequest, new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult){
+                super.onLocationResult(locationResult);
+                android.location.Location location = locationResult.getLastLocation();
+                currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
+
+                // Add a circle with a radius of 500 kilometers
+                CircleOptions circleOptions = new CircleOptions()
+                        .center(currentUserLocation)
+                        .radius(500000) // Radius in meters (500 kilometers)
+                        .strokeWidth(2) // Width of the circle's outline
+                        .strokeColor(Color.BLUE) // Color of the circle's outline
+                        .fillColor(Color.parseColor("#500084d3")); // Color of the circle's fill
+
+                mMap.addCircle(circleOptions);
+
+                //LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                Toast.makeText(getActivity(), "(" + location.getLatitude() + ","
+                        + location.getLongitude() +")", Toast.LENGTH_SHORT).show();
+            }
+        }, null);
+        Log.d(TAG, "After request Location Updates");
+
     }
 
     private class LoadLocationsTask extends AsyncTask<Void, Void, Void> {
@@ -126,19 +189,34 @@ public class MapsFragment extends Fragment {
                                 double lng = Double.parseDouble(loc.getLongitude());
 
                                 LatLng position = new LatLng(lat, lng);
-                                Marker marker = mMap.addMarker(new MarkerOptions()
-                                        .position(position)
-                                        .icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_volunteer_activism_24))
-                                        .snippet(loc.getLocationName())
-                                        .title(loc.getLocationName()));
 
-                                // Check if it's the last location in the list
-                                if (i == 0) {
-                                    mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
+                                // Calculate distance
+                                double distance = SphericalUtil.computeDistanceBetween(
+                                        currentUserLocation, position);
+
+//                                Separate into three cases
+
+                                Marker marker = null;
+
+//                                1. The admin can view all the location
+
+
+//                                2. The volunteer can only view the location in the current 500 radius area
+                                if(distance < 500000) {
+                                    // show marker within 500km
+                                    marker = mMap.addMarker(new MarkerOptions()
+                                            .position(position)
+                                            .icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_volunteer_activism_24))
+                                            .snippet(loc.getLocationName())
+                                            .title(loc.getLocationName()));
                                 }
 
+//                                3. The Owner can view all the location belongs to the owner
+
                                 // Add click listener to the marker
-                                marker.setTag(i);  // Use the index i as a tag to identify the marker
+                                if(marker != null) {
+                                    marker.setTag(i);  // Use the index i as a tag to identify the marker
+                                }
 
                                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                     @Override
