@@ -1,0 +1,9 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/recipeNameTextView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bordered_textview"
+    android:fontFamily="@font/carter_one"
+    android:padding="16dp"
+    android:textColor="@color/black"
+    android:textSize="18sp" />

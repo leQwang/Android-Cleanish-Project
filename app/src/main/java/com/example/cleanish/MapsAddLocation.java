@@ -59,7 +59,7 @@ public class MapsAddLocation extends AppCompatActivity {
         longitudeEditText.setText(String.valueOf(longitude));
 
 
-//       Set Up Button
+//       Set Up Add location Button -----------------------------------------------------------------
         addlocationButton = findViewById(R.id.addLocationButton);
         backButton = findViewById(R.id.addLocationBackButton);
 

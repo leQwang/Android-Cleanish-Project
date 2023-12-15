@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -37,7 +38,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -54,6 +57,7 @@ public class FilterFragment extends Fragment {
     private SearchView searchView;
     private ListView listView;
     private ArrayList<Location> locationArrayList;
+    Map<String, String> locationsMap = new HashMap<>();
 
 
     // TODO: Rename parameter arguments, choose names that match
@@ -148,16 +152,13 @@ public class FilterFragment extends Fragment {
                     if (task.isSuccessful()) {
                         locationArrayList = new ArrayList<>(task.getResult().toObjects(Location.class));
 
-                        ArrayList<String> locationName = new ArrayList<>();
-
-                        for(Location location : locationArrayList) {
-                            locationName.add(location.getLocationName());
+                        for(DocumentSnapshot doc : task.getResult()) {
+                            Location location = doc.toObject(Location.class);
+                            String id = doc.getId();
+                            locationsMap.put(location.getLocationName(), id);
                         }
 
-                        ListAdapter adapter = new ArrayAdapter<>(getContext(),
-                                android.R.layout.simple_list_item_1, locationName);
-
-                        listView.setAdapter(adapter);
+                        updateFilter("");
 
                     }
                 });
@@ -171,20 +172,14 @@ public class FilterFragment extends Fragment {
 
             @Override
             public boolean onQueryTextChange(String s) {
-                Log.d(TAG, "String Search = " + s);
-
-                ArrayList<String> locationName = new ArrayList<>();
-
-                for(Location location : locationArrayList) {
-                    if(location.getLocationName().toLowerCase().contains(s.toLowerCase())){
-                        locationName.add(location.getLocationName());
-                    }
+//                Log.d(TAG, "String Search = " + s);
+                if (s.isEmpty()){
+                    isSearch = false;
+                }else {
+                    isSearch = true;
                 }
 
-                ListAdapter adapter = new ArrayAdapter<>(getContext(),
-                        android.R.layout.simple_list_item_1, locationName);
-
-                listView.setAdapter(adapter);
+                updateFilter(s);
 
 
                 return false;
@@ -192,16 +187,87 @@ public class FilterFragment extends Fragment {
         });
     }
 
+    private void updateFilter(String s){
 
-//    @Override
-//    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-//
-//        super.onViewCreated(view, savedInstanceState);
-//
-//
-//
-//
-//    }
+        ArrayList<Location> locationItemList = new ArrayList<>();
+        ArrayList<String> locationItemName = new ArrayList<>();
+
+        for(Location location : locationArrayList) {
+            Log.d(TAG, "Date start " + dateBetween + ", date end " + dateAnd + ", isSearch " + isSearch + ", is Filter " + isFilterDate + ", is Filter Start " + isFilterDateStart + ", is Filter End " + isFilterDateEnd );
+            if(isFilterDate && isSearch){
+                if(isFilterDateStart && isFilterDateEnd){
+                    Log.d(TAG, "Event date " + location.getEventDate() + ", start between " + dateBetween + " and " + dateAnd);
+                    if(location.getEventDate().after(dateBetween) && location.getEventDate().before(dateAnd)){
+                        if(location.getLocationName().toLowerCase().contains(s.toLowerCase())) {
+                            locationItemList.add(location);
+                            locationItemName.add(location.getLocationName());
+                        }
+                    }else{
+                        Toast.makeText(getContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+                    }
+
+                }else {
+                    Toast.makeText(getContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
+                }
+
+            }else if(isSearch){
+                if(location.getLocationName().toLowerCase().contains(s.toLowerCase())) {
+                    locationItemList.add(location);
+                    locationItemName.add(location.getLocationName());
+                }
+            } else if (isFilterDate) {
+                if(isFilterDateStart && isFilterDateEnd){
+                    Log.d(TAG, "Event date " + location.getEventDate() + ", start between " + dateBetween + " and " + dateAnd);
+                    if(location.getEventDate().after(dateBetween) && location.getEventDate().before(dateAnd)){
+                            locationItemList.add(location);
+                            locationItemName.add(location.getLocationName());
+                    }else{
+                        Toast.makeText(getContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+                    }
+
+                }else {
+                    Toast.makeText(getContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
+                }
+            }else {
+                locationItemList.add(location);
+                locationItemName.add(location.getLocationName());
+            }
+
+        }
+
+        ListAdapter adapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_list_item_1, locationItemName);
+
+        listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            @Override
+            public void onItemClick(AdapterView parent, View view, int position, long id){
+
+                Location selectedLocation = locationItemList.get(position);
+
+                Intent intent = new Intent(getContext(), RegisterVolunteerActivity.class);
+
+                String locationId = locationsMap.get(selectedLocation.getLocationName());
+                Log.d(TAG, "Location ID " + locationId + ", selected Location get name " + selectedLocation.getLocationName() + ", locationsMap: " + locationsMap.toString());
+
+                intent.putExtra("locationID", locationId);
+
+                intent.putExtra("locationName", selectedLocation.getLocationName());
+                intent.putExtra("locationOwner", selectedLocation.getLocationOwnerId());
+                intent.putExtra("duration", String.valueOf(selectedLocation.getDuration()));
+
+                Date eventDate = selectedLocation.getEventDate(); // Assuming loc.getEventDate() returns a Date object
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                String formattedEventDate = dateFormat.format(eventDate);
+                intent.putExtra("eventDate", formattedEventDate);
+
+                intent.putExtra("from", "filter");
+
+                startActivity(intent);
+            }
+        });
+    }
 
 //    Handle Button---------------------------------------------------------------------------------
 //    Between -----------------------------------------------
@@ -209,7 +275,7 @@ public class FilterFragment extends Fragment {
         DatePickerDialog.OnDateSetListener dateSetListenerBetween = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) { //month 0-11
-//                isFilterDate = true;
+                isFilterDate = true;
                 isFilterDateStart = true;
                 calendarBetween.set(year, month, day);
 
@@ -223,8 +289,10 @@ public class FilterFragment extends Fragment {
                     calendarBetween.set(year, month, day);
                     dateBetween = calendarBetween.getTime();
                     betweenButton.setText(makeDateString(day, month, year));
-                    Toast.makeText(getContext(), "Else Selected Date between " + dateBetween + " and " + dateAnd, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getContext(), "Else Selected Date between " + dateBetween + " and " + dateAnd, Toast.LENGTH_SHORT).show();
                 }
+
+                updateFilter("");
             }
         };
         Calendar cal = Calendar.getInstance();
@@ -247,7 +315,7 @@ public class FilterFragment extends Fragment {
         DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) { //month 0-11
-//                isFilterDate = true;
+                isFilterDate = true;
                 isFilterDateEnd = true;
                 calendarAnd.set(year, month, day);
 
@@ -264,8 +332,10 @@ public class FilterFragment extends Fragment {
                     calendarAnd.set(year, month, day);
                     dateAnd = calendarAnd.getTime();
                     andButton.setText(makeDateString(day, month, year));
-                    Toast.makeText(getContext(), "Else Selected Date between " + dateBetween + " and " + dateAnd, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getContext(), "Else Selected Date between " + dateBetween + " and " + dateAnd, Toast.LENGTH_SHORT).show();
                 }
+
+                updateFilter("");
 
             }
         };

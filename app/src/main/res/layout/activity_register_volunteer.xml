@@ -92,6 +92,17 @@
                     android:text="1 day"
                     android:textSize="20sp" />
 
+            <TextView
+                android:id="@+id/registerVolunteerMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="You are the owner of this location"
+                android:textAlignment="center"
+                android:textColor="@color/purple_500"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
             <Button
                 android:id="@+id/registerVolunteerButton"
                 android:layout_width="217dp"
@@ -103,6 +114,19 @@
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
+                app:layout_constraintVertical_bias="0.838" />
+
+            <Button
+                android:id="@+id/removeVolunteerButton"
+                android:layout_width="217dp"
+                android:layout_height="56dp"
+                android:backgroundTint="@color/red"
+                android:text="Remove"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
                 app:layout_constraintVertical_bias="0.838" />
 
             <Button

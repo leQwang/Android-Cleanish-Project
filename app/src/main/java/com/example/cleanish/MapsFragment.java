@@ -1,5 +1,7 @@
 package com.example.cleanish;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -152,6 +154,7 @@ public class MapsFragment extends Fragment {
                                             // Start a new activity with information from the clicked location (loc)
                                             Intent intentNew = new Intent(getContext(), RegisterVolunteerActivity.class);
                                             intentNew.putExtra("locationID", locationId);
+                                            Log.d(TAG, "Location ID " + locationId);
                                             intentNew.putExtra("locationName", clickedLoc.getLocationName());
                                             intentNew.putExtra("locationOwner", clickedLoc.getLocationOwnerId());
                                             intentNew.putExtra("duration", String.valueOf(clickedLoc.getDuration()));
@@ -160,6 +163,8 @@ public class MapsFragment extends Fragment {
                                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                                             String formattedEventDate = dateFormat.format(eventDate);
                                             intentNew.putExtra("eventDate", formattedEventDate);
+
+                                            intentNew.putExtra("from", "map");
 
                                             startActivity(intentNew);
                                             return true;
