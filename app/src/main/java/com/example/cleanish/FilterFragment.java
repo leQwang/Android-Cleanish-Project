@@ -256,6 +256,7 @@ public class FilterFragment extends Fragment {
                 intent.putExtra("locationName", selectedLocation.getLocationName());
                 intent.putExtra("locationOwner", selectedLocation.getLocationOwnerId());
                 intent.putExtra("duration", String.valueOf(selectedLocation.getDuration()));
+                intent.putExtra("isFinished", selectedLocation.getIsFinished());
 
                 Date eventDate = selectedLocation.getEventDate(); // Assuming loc.getEventDate() returns a Date object
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");

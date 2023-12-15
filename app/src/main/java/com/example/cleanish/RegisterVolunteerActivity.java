@@ -31,7 +31,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RegisterVolunteerActivity extends AppCompatActivity {
 
@@ -248,12 +250,40 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
 
 
 //            Finished Button
-//            finishedLocationButton.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View view) {
-//                    if(amountOfTrashEditText.getNu)
-//                }
-//            });
+            finishedLocationButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    boolean isValid = true;
+                    int amountTrashCollected = 0;
+                    try {
+                        amountTrashCollected = Integer.parseInt(amountOfTrashEditText.getText().toString().trim());
+                    } catch (NumberFormatException e) {
+                        amountOfTrashEditText.setError("Invalid value Duration");
+                        isValid = false;
+                    }
+                    if (amountTrashCollected < 0) {
+                        amountOfTrashEditText.setError("Duration must be > 0");
+                        isValid = false;
+                    }
+
+                    if(isValid){
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("amountTrashCollected", amountTrashCollected);
+                        updates.put("isFinished", true);
+
+                        locationRef.update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished successfully", Toast.LENGTH_SHORT).show();
+                                    Log.d(TAG, "Update successful!");
+                                    startActivity(intentBack);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished failed", Toast.LENGTH_SHORT).show();
+                                    Log.e(TAG, "Update failed", e);
+                                });
+                    }
+                }
+            });
 
 
 
