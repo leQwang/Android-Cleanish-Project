@@ -157,7 +157,6 @@ public class MapsAddLocation extends AppCompatActivity {
                                 Toast.makeText(MapsAddLocation.this, "Failed creating Location", Toast.LENGTH_SHORT).show();
                             });
 
-
                 }
             }
         });

@@ -51,10 +51,7 @@ public class MainActivity extends AppCompatActivity {
             replaceFragment(new ProfileFragment());
         }
 
-
         binding.bottomNav.setOnItemSelectedListener(item -> {
-//            Toast.makeText(MainActivity.this,
-//                    item.getItemId() + " and " + R.id.navHome, Toast.LENGTH_SHORT).show();
             if (item.getItemId() == navHome) {
                 Log.d("item Id Home", String.valueOf(R.id.navHome));
                 replaceFragment(new HomeFragment());

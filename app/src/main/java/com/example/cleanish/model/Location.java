@@ -15,10 +15,18 @@ public class Location {
     private List<String> volunteers;
     private String latitude;
     private String longitude;
+    private int amountTrashCollected;
+    private List<List> notifications;
+
+    private boolean isFinished;
+
 
 
     public Location() {
         this.volunteers = new ArrayList<>();
+        this.notifications = new ArrayList<>();
+        this.amountTrashCollected = new Integer(0);
+        this.isFinished = false;
     }
 
     public Location(String locationName, String locationOwnerId, Date eventDate, int duration,
@@ -32,6 +40,25 @@ public class Location {
         this.latitude = latitude;
         this.longitude = longitude;
         this.volunteers = new ArrayList<>();
+        this.notifications = new ArrayList<>();
+        this.amountTrashCollected = new Integer(0);
+        this.isFinished = false;
+    }
+
+    public int getAmountTrashCollected() {
+        return amountTrashCollected;
+    }
+
+    public void setAmountTrashCollected(int amountTrashCollected) {
+        this.amountTrashCollected = amountTrashCollected;
+    }
+
+    public List<List> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<List> notifications) {
+        this.notifications = notifications;
     }
 
     public String getLocationName() {
@@ -104,5 +131,13 @@ public class Location {
 
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public boolean getIsFinished() {
+        return isFinished;
+    }
+
+    public void setIsFinished(boolean finished) {
+        this.isFinished = finished;
     }
 }

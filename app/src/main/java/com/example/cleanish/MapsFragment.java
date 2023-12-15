@@ -87,7 +87,7 @@ public class MapsFragment extends Fragment {
 
                 @Override
                 public void onMapClick(LatLng latLng) {
-                    Intent intent = new Intent(getContext(), MapsAddLocation.class);
+                    Intent intent = new Intent(requireContext(), MapsAddLocation.class);
 
                     intent.putExtra("latitude", String.valueOf(latLng.latitude));
                     intent.putExtra("longitude", String.valueOf(latLng.longitude));
@@ -96,15 +96,16 @@ public class MapsFragment extends Fragment {
             });
             startLocationUpdate();
 
+
             new LoadLocationsTask().execute();
         }
     };
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        new LoadLocationsTask().execute();
-//    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        new LoadLocationsTask().execute();
+    }
 
     @Nullable
     @Override
@@ -143,22 +144,23 @@ public class MapsFragment extends Fragment {
                 super.onLocationResult(locationResult);
                 android.location.Location location = locationResult.getLastLocation();
                 currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+                Marker marker = null;
+
+                marker = mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+
+                if(marker != null) {
+                    marker.setTag(0);  // Use the index i as a tag to identify the marker
+                }
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
 
                 // Add a circle with a radius of 500 kilometers
-                CircleOptions circleOptions = new CircleOptions()
-                        .center(currentUserLocation)
-                        .radius(500000) // Radius in meters (500 kilometers)
-                        .strokeWidth(2) // Width of the circle's outline
-                        .strokeColor(Color.BLUE) // Color of the circle's outline
-                        .fillColor(Color.parseColor("#500084d3")); // Color of the circle's fill
 
-                mMap.addCircle(circleOptions);
+                mMap.setMyLocationEnabled(true);
 
                 //LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                Toast.makeText(getActivity(), "(" + location.getLatitude() + ","
-                        + location.getLongitude() +")", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getActivity(), "(" + location.getLatitude() + ","
+//                        + location.getLongitude() +")", Toast.LENGTH_SHORT).show();
             }
         }, null);
         Log.d(TAG, "After request Location Updates");
@@ -179,9 +181,13 @@ public class MapsFragment extends Fragment {
 
                             List<Location> locations = task.getResult().toObjects(Location.class);
 
+                            Log.d(TAG, "Location size begin" + locations.size());
 
-                            for (int i = 0; i < locations.size(); i++) {
-                                Location loc = locations.get(i);
+
+                            for (int i = 1; i < locations.size()+1; i++) {
+                                Log.d(TAG, "index for " + i);
+                                Log.d(TAG, "Location size for" + locations.size());
+                                Location loc = locations.get(i-1);
 
 //                                Toast.makeText(getContext(), loc.getLocationName(), Toast.LENGTH_SHORT).show();
 
@@ -191,8 +197,8 @@ public class MapsFragment extends Fragment {
                                 LatLng position = new LatLng(lat, lng);
 
                                 // Calculate distance
-                                double distance = SphericalUtil.computeDistanceBetween(
-                                        currentUserLocation, position);
+//                                double distance = SphericalUtil.computeDistanceBetween(
+//                                        currentUserLocation, position);
 
 //                                Separate into three cases
 
@@ -202,14 +208,14 @@ public class MapsFragment extends Fragment {
 
 
 //                                2. The volunteer can only view the location in the current 500 radius area
-                                if(distance < 500000) {
+//                                if(distance < 500000) {
                                     // show marker within 500km
                                     marker = mMap.addMarker(new MarkerOptions()
                                             .position(position)
                                             .icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_volunteer_activism_24))
                                             .snippet(loc.getLocationName())
                                             .title(loc.getLocationName()));
-                                }
+//                                }
 
 //                                3. The Owner can view all the location belongs to the owner
 
@@ -217,18 +223,26 @@ public class MapsFragment extends Fragment {
                                 if(marker != null) {
                                     marker.setTag(i);  // Use the index i as a tag to identify the marker
                                 }
+                            }
 
-                                mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                                    @Override
-                                    public boolean onMarkerClick(Marker marker) {
-                                        int index = (int) marker.getTag();
-                                        DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(index);
-                                        String locationId = documentSnapshot.getId();
+                            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                @Override
+                                public boolean onMarkerClick(Marker marker) {
+                                    int index = (int) marker.getTag();
+                                    if(index == 0 ) {
+                                        return true;
+                                    }
+                                    DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(index-1);
+                                    String locationId = documentSnapshot.getId();
 
-                                        Location clickedLoc = locations.get(index);
+                                    Log.d(TAG, "index  " + index);
+                                    Log.d(TAG, "Location size " + locations.size());
 
-                                        // Handle the click event, for example, start a new activity
-                                        if (index != -1) {
+                                    Location clickedLoc = locations.get(index-1);
+
+                                    // Handle the click event, for example, start a new activity
+                                    if (index != -1) {
+
                                             // Start a new activity with information from the clicked location (loc)
                                             Intent intentNew = new Intent(getContext(), RegisterVolunteerActivity.class);
                                             intentNew.putExtra("locationID", locationId);
@@ -236,6 +250,8 @@ public class MapsFragment extends Fragment {
                                             intentNew.putExtra("locationName", clickedLoc.getLocationName());
                                             intentNew.putExtra("locationOwner", clickedLoc.getLocationOwnerId());
                                             intentNew.putExtra("duration", String.valueOf(clickedLoc.getDuration()));
+                                            intentNew.putExtra("isFinished", clickedLoc.getIsFinished());
+                                            Log.d(TAG, "is finished " + String.valueOf(clickedLoc.getIsFinished()));
 
                                             Date eventDate = clickedLoc.getEventDate(); // Assuming loc.getEventDate() returns a Date object
                                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
@@ -245,13 +261,14 @@ public class MapsFragment extends Fragment {
                                             intentNew.putExtra("from", "map");
 
                                             startActivity(intentNew);
-                                            return true;
-                                        }
 
-                                        return false;
+                                        return true;
                                     }
-                                });
-                            }
+
+                                    return false;
+                                }
+                            });
+
                         }
                     });
 

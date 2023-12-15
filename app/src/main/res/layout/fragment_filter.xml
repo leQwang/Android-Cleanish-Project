@@ -12,7 +12,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="30dp"
+        android:layout_margin="20dp"
         app:cardCornerRadius="30dp"
         android:elevation="20dp"
         app:cardBackgroundColor="@color/white">
@@ -59,7 +59,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Between: "
+                    android:text="From: "
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginStart="5dp"/>
@@ -88,7 +88,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:text="and           "
+                    android:text="to        "
                     android:textAlignment="viewStart"
                     android:textSize="16sp"
                     android:textStyle="bold" />
