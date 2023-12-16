@@ -140,6 +140,18 @@
                 android:textColor="@color/white"
                 app:layout_constraintVertical_bias="0.838" />
 
+            <Button
+                android:id="@+id/getPathVolunteerButton"
+                android:layout_width="217dp"
+                android:layout_height="56dp"
+                android:backgroundTint="@color/blue"
+                android:layout_marginTop="5dp"
+                android:text="get path"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                app:layout_constraintVertical_bias="0.838" />
+
             <LinearLayout
                 android:id="@+id/linearLayoutAmountTrash"
                 android:layout_width="wrap_content"
@@ -190,7 +202,7 @@
 
             <Button
                 android:id="@+id/registerVolunteerBackButton"
-                android:layout_width="217dp"
+                android:layout_width="141dp"
                 android:layout_height="56dp"
                 android:backgroundTint="@color/red"
                 android:text="Back"

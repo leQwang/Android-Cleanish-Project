@@ -23,6 +23,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.example.cleanish.Util.DirectionPointListener;
+import com.example.cleanish.Util.GetPathFromLocation;
 import com.example.cleanish.databinding.ActivityMainBinding;
 import com.example.cleanish.model.Location;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -40,10 +42,20 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.maps.DirectionsApi;
+import com.google.maps.DirectionsApiRequest;
+import com.google.maps.GeoApiContext;
 import com.google.maps.android.SphericalUtil;
+import com.google.maps.model.DirectionsLeg;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsRoute;
+import com.google.maps.model.DirectionsStep;
+import com.google.maps.model.EncodedPolyline;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,6 +89,7 @@ public class MapsFragment extends Fragment {
 //            LatLng sydney = new LatLng(-34, 151);
 //            googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 //            googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
             requestPermission();
             client = LocationServices.getFusedLocationProviderClient(getActivity());
             Log.d(TAG, "Current client: " + client);
@@ -98,6 +111,7 @@ public class MapsFragment extends Fragment {
 
 
             new LoadLocationsTask().execute();
+
         }
     };
 
@@ -143,27 +157,71 @@ public class MapsFragment extends Fragment {
             public void onLocationResult(LocationResult locationResult){
                 super.onLocationResult(locationResult);
                 android.location.Location location = locationResult.getLastLocation();
-                currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                Marker marker = null;
+                LatLng newUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-                marker = mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+                Marker marker = null;
+//                Check if the location of the user changed?
+                if(currentUserLocation == null){
+                    Log.d(TAG, "currentUserLocation is NULL");
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    marker = mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+
+                    Bundle arguments = getArguments();
+                    if (arguments != null) {
+                        double lat = arguments.getDouble("lat", 0.0);
+                        double lng = arguments.getDouble("lng", 0.0);
+
+                        Log.d(TAG, "Latitude: " + lat + ", Longitude: " + lng);
+
+                        // Do something with lat and lng, e.g., update the map marker
+                        LatLng locationDes = new LatLng(lat, lng);
+                        mMap.addMarker(new MarkerOptions().position(locationDes).title("Custom Marker"));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(locationDes, 12));
+
+                        Log.d(TAG, "currentUserLocation: " + currentUserLocation + ", and location: " + location);
+
+                        drawPath(currentUserLocation, locationDes);
+                    } else {
+                        Log.d(TAG, "Arguments are null");
+                    }
+                }
+
+                if(!currentUserLocation.equals(newUserLocation)){
+                    Log.d(TAG, "currentUserLocation lat " + currentUserLocation.latitude + ", long " + currentUserLocation.longitude);
+                    Log.d(TAG, "newUserLocation lat " + newUserLocation.latitude + ", long " + newUserLocation.longitude);
+
+                    marker = mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+
+//                    marker = mMap.addMarker(new MarkerOptions()
+//                            .position(currentUserLocation));
+                }
+
 
                 if(marker != null) {
-                    marker.setTag(0);  // Use the index i as a tag to identify the marker
+                    marker.setTag(0);
                 }
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
-
-                // Add a circle with a radius of 500 kilometers
 
                 mMap.setMyLocationEnabled(true);
-
-                //LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//                Toast.makeText(getActivity(), "(" + location.getLatitude() + ","
-//                        + location.getLongitude() +")", Toast.LENGTH_SHORT).show();
             }
         }, null);
         Log.d(TAG, "After request Location Updates");
+    }
+
+    private void drawPath(LatLng start, LatLng end){
+        new GetPathFromLocation(start, end, new DirectionPointListener() {
+            @Override
+            public void onPath(PolylineOptions polyLine) {
+                mMap.addPolyline(polyLine);
+            }
+        }).execute();
+
 
     }
 

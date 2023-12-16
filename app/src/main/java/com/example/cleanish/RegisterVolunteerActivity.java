@@ -4,6 +4,8 @@ import static android.content.ContentValues.TAG;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -37,7 +40,7 @@ import java.util.Map;
 
 public class RegisterVolunteerActivity extends AppCompatActivity {
 
-    private Button registerVolunteerButton, registerVolunteerBackButton, removeVolunteerButton, finishedLocationButton;
+    private Button registerVolunteerButton, registerVolunteerBackButton, removeVolunteerButton, finishedLocationButton, getPathLocationButton;
     private TextView locationNameTextView, locationOwnerTextView, durationTextView, eventDateTextView, messageTextView;
     private LinearLayout linearLayoutAmountTrash;
     private EditText amountOfTrashEditText;
@@ -110,6 +113,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
         removeVolunteerButton = findViewById(R.id.removeVolunteerButton);
         registerVolunteerBackButton = findViewById(R.id.registerVolunteerBackButton);
         finishedLocationButton = findViewById(R.id.finishedLocationButton);
+        getPathLocationButton = findViewById(R.id.getPathVolunteerButton);
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
@@ -249,7 +253,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
             });
 
 
-//            Finished Button
+//            Finished Button -------------------------------------------------------------------
             finishedLocationButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -285,7 +289,34 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                 }
             });
 
+            getPathLocationButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    locationRef.get().addOnSuccessListener(documentSnapshot -> {
+                        String lat = documentSnapshot.getString("latitude");
+                        String lng = documentSnapshot.getString("longitude");
 
+//                        double latitude = 0.0;
+//                        double longitude = 0.0;
+//
+//                        try {
+//                            latitude = Double.parseDouble(lat);
+//                            longitude = Double.parseDouble(lng);
+//                        } catch (NumberFormatException e) {
+//                            Log.e(TAG, "Invalid Parsing to Double");
+//                            e.printStackTrace();
+//                        }
+
+                        Intent intentMap = new Intent(RegisterVolunteerActivity.this, MainActivity.class);
+                        intentMap.putExtra("fragment", "map");
+                        intentMap.putExtra("purpose", "getPath");
+                        intentMap.putExtra("latitude", lat);
+                        intentMap.putExtra("longitude", lng);
+                        startActivity(intentMap);
+
+                    });
+                }
+            });
 
         }
 

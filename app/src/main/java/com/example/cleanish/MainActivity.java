@@ -1,5 +1,6 @@
 package com.example.cleanish;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
 //        setContentView(R.layout.activity_main);
         Intent intent = getIntent();
         intentDefaultFragment = intent.getStringExtra("fragment");
+        String purpose = intent.getStringExtra("purpose");
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -37,10 +39,38 @@ public class MainActivity extends AppCompatActivity {
 //            2131362109
             binding.bottomNav.setSelectedItemId(Integer.valueOf(navHome)); //Use the id of the item to set selected
             replaceFragment(new HomeFragment());
-        } else if (intentDefaultFragment.equals("map")) {
+        } else if (intentDefaultFragment.equals("map") && purpose == null) {
 //            2131362110
             binding.bottomNav.setSelectedItemId(Integer.valueOf(navMap));
             replaceFragment(new MapsFragment());
+        }else if (intentDefaultFragment.equals("map")) {
+//            2131362110
+            binding.bottomNav.setSelectedItemId(Integer.valueOf(navMap));
+//            replaceFragment(new MapsFragment());
+                Bundle bundle = new Bundle();
+                String lat = intent.getStringExtra("latitude");
+                String lng = intent.getStringExtra("longitude");
+
+                double latitude = 0.0;
+                double longitude = 0.0;
+
+                try {
+                    latitude = Double.parseDouble(lat);
+                    longitude = Double.parseDouble(lng);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+
+                bundle.putDouble("lat", latitude);
+                bundle.putDouble("lng", longitude);
+
+                MapsFragment mapsFragment = new MapsFragment();
+                mapsFragment.setArguments(bundle);
+
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.frameLayout, mapsFragment)
+                        .commit();
+
         }else if (intentDefaultFragment.equals("filter")) {
 //            2131362108
             binding.bottomNav.setSelectedItemId(Integer.valueOf(navFilter));
@@ -71,6 +101,13 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
     }
+
+//    @Override
+//    protected void onSaveInstanceState(@NonNull Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        // Save the initial fragment in case of configuration changes
+//        outState.putString("initialFragment", intentDefaultFragment);
+//    }
 
     private void replaceFragment(Fragment fragment){
         FragmentManager fragmentManager = getSupportFragmentManager();
