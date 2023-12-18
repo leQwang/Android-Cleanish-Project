@@ -18,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     String intentDefaultFragment;
 
-    private int navHome, navMap, navFilter, navProfile;
+    private int navHome, navMap, navFilter, navNotification, navProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         navHome = R.id.navHome;
         navMap = R.id.navMap;
         navFilter = R.id.navFilter;
+        navNotification = R.id.navNotification;
         navProfile = R.id.navProfile;
 
         if(intentDefaultFragment.equals("home")){
@@ -75,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
 //            2131362108
             binding.bottomNav.setSelectedItemId(Integer.valueOf(navFilter));
             replaceFragment(new FilterFragment());
+        }else if (intentDefaultFragment.equals("notification")){
+            binding.bottomNav.setSelectedItemId(Integer.valueOf(navNotification));
+            replaceFragment(new NotificationFragment());
         }else {
 //            2131362111
             binding.bottomNav.setSelectedItemId(Integer.valueOf(navProfile));
@@ -93,7 +97,9 @@ public class MainActivity extends AppCompatActivity {
             } else if (item.getItemId() == navFilter) {
                 Log.d("item Id Filter", String.valueOf(R.id.navFilter));
                 replaceFragment(new FilterFragment());
-
+            } else if (item.getItemId() == navNotification) {
+                Log.d("item Id Notification", String.valueOf(R.id.navNotification));
+                replaceFragment(new NotificationFragment());
             } else if (item.getItemId() == navProfile) {
                 Log.d("item Id Profile", String.valueOf(R.id.navProfile));
                 replaceFragment(new ProfileFragment());

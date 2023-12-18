@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.VectorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -44,6 +45,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -74,16 +77,6 @@ public class MapsFragment extends Fragment {
 
     private OnMapReadyCallback callback = new OnMapReadyCallback() {
 
-
-        /**
-         * Manipulates the map once available.
-         * This callback is triggered when the map is ready to be used.
-         * This is where we can add markers or lines, add listeners or move the camera.
-         * In this case, we just add a marker near Sydney, Australia.
-         * If Google Play services is not installed on the device, the user will be prompted to
-         * install it inside the SupportMapFragment. This method will only be triggered once the
-         * user has installed Google Play services and returned to the app.
-         */
         @Override
         public void onMapReady(GoogleMap googleMap) {
 //            LatLng sydney = new LatLng(-34, 151);
@@ -230,7 +223,18 @@ public class MapsFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
 
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser user = auth.getCurrentUser();
+            String uid = user.getUid();
+
             CollectionReference collectionRef = FirebaseFirestore.getInstance().collection("Locations");
+
+//            BitmapDescriptor icon = bitmapDescriptorFromVector(getContext(), R.drawable.baseline_person_pin_24);
+
+//            Drawable vectorDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.baseline_person_pin_24);
+//            if (vectorDrawable instanceof VectorDrawable) {
+//                vectorDrawable.setTint(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
+//            }
 
             collectionRef.get()
                     .addOnCompleteListener(task -> {
@@ -246,8 +250,6 @@ public class MapsFragment extends Fragment {
                                 Log.d(TAG, "index for " + i);
                                 Log.d(TAG, "Location size for" + locations.size());
                                 Location loc = locations.get(i-1);
-
-//                                Toast.makeText(getContext(), loc.getLocationName(), Toast.LENGTH_SHORT).show();
 
                                 double lat = Double.parseDouble(loc.getLatitude());
                                 double lng = Double.parseDouble(loc.getLongitude());
@@ -267,13 +269,24 @@ public class MapsFragment extends Fragment {
 
 //                                2. The volunteer can only view the location in the current 500 radius area
 //                                if(distance < 500000) {
-                                    // show marker within 500km
+//                                  show marker within 500km
+//                                }
+
+                                if(uid.equals(loc.getLocationOwnerId())){
+                                    // Create a marker with the tinted icon
+                                    marker = mMap.addMarker(new MarkerOptions()
+                                            .position(position)
+                                            .icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_person_pin_30))
+                                            .snippet(loc.getLocationName())
+                                            .title(loc.getLocationName()));
+                                }else{
                                     marker = mMap.addMarker(new MarkerOptions()
                                             .position(position)
                                             .icon(bitmapDescriptorFromVector(getContext(), R.drawable.baseline_volunteer_activism_24))
                                             .snippet(loc.getLocationName())
                                             .title(loc.getLocationName()));
-//                                }
+                                }
+
 
 //                                3. The Owner can view all the location belongs to the owner
 

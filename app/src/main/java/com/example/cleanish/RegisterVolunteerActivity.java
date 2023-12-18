@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.cleanish.model.User;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -33,7 +34,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,18 +72,19 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
         String duration = intent.getStringExtra("duration");
 
         String from = intent.getStringExtra("from");
-
         boolean isFinished = intent.getBooleanExtra("isFinished", false);
-
-        Toast.makeText(RegisterVolunteerActivity.this, String.valueOf(isFinished), Toast.LENGTH_SHORT).show();
-
 
         Intent intentBack = new Intent(RegisterVolunteerActivity.this, MainActivity.class);
         intentBack.putExtra("fragment", from);
 
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
+        String userId = user.getUid();
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference locationRef = db.collection("Locations").document(locationId);
+        CollectionReference usersRef = db.collection("Users");
+        DocumentReference volunteerRef = db.collection("Users").document(userId);
 
 
 //        locationRef.get().addOnCompleteListener(task -> {
@@ -115,186 +119,254 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
         finishedLocationButton = findViewById(R.id.finishedLocationButton);
         getPathLocationButton = findViewById(R.id.getPathVolunteerButton);
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
-        String userId = user.getUid();
-        DocumentReference volunteerRef = db.collection("Users").document(userId);
         isDisplayRemove(false,false, isFinished, "Register to become a volunteer");
 
-        if(isFinished){
-            isDisplayRemove(false, false, isFinished, "The Event has finished");
-        }else {
-            //        Check if the user is the owner of the location----------------------------------
-            if(userId.equals(locationOwner)){
-                isDisplayRemove(true,false, isFinished, "You are the owner of this location");
+        Date currentDate = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+        String currentDateTimeString = formatter.format(currentDate);
 
-                removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
+        volunteerRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        User user = document.toObject(User.class);
+                        String role = user.getRole();
+                        Log.d(TAG, "Got role: " + role);
+
+                        if(isFinished){
+                            isDisplayRemove(false, false, isFinished, "The Event has finished");
+                        }else {
+                            //        Check if the user is the owner of the location or an admin----------------------------------
+                            if(userId.equals(locationOwner) || role.equals("Admin")){
+                                isDisplayRemove(true,false, isFinished, "You are the owner of this location");
+
+                                removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
 //                          Remove the location from the Owner location list
-                        ownerRef.update("locationsOwned", FieldValue.arrayRemove(locationId))
-                                .addOnSuccessListener(aVoid -> {
-                                    Log.d(TAG, "Removed location id Successfully from the user");
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e(TAG, "Removed location id Failed from the user");
-                                });
+                                        ownerRef.update("locationsOwned", FieldValue.arrayRemove(locationId))
+                                                .addOnSuccessListener(aVoid -> {
+                                                    ownerRef.update("notifications", FieldValue.arrayUnion("Location Removed: " + locationName + " at " + currentDateTimeString))
+                                                            .addOnSuccessListener(aVoidNew -> {
+                                                                Log.d(TAG, "Removed location id Successfully from the user");
+                                                            })
+                                                            .addOnFailureListener(e -> {
+                                                                Log.d(TAG, "Removed location id Failed from the user");
+                                                            });
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.e(TAG, "Removed location id Failed from the user");
+                                                });
 //                          Remove location from the collection
-                        locationRef.delete()
+                                        locationRef.delete()
 //                            Remove the location from the Volunteer Location list
-                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        CollectionReference usersRef = db.collection("Users");
+                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                    @Override
+                                                    public void onSuccess(Void aVoid) {
+                                                        usersRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
 
-                                        usersRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                if(task.isSuccessful()) {
+                                                                    for(DocumentSnapshot doc : task.getResult()) {
 
-                                                if(task.isSuccessful()) {
-                                                    for(DocumentSnapshot doc : task.getResult()) {
+                                                                        // Get array for this user
+                                                                        ArrayList locations = (ArrayList) doc.get("locationsVolunteered");
 
-                                                        // Get array for this user
-                                                        ArrayList locations = (ArrayList) doc.get("locationsVolunteered");
+                                                                        // Remove locationId if exists
+                                                                        if(locations != null && locations.contains(locationId)) {
 
-                                                        // Remove locationId if exists
-                                                        if(locations != null && locations.contains(locationId)) {
+                                                                            ArrayList updatedLocations = new ArrayList();
+                                                                            updatedLocations.addAll(locations);
+                                                                            updatedLocations.remove(locationId);
 
-                                                            ArrayList updatedLocations = new ArrayList();
-                                                            updatedLocations.addAll(locations);
-                                                            updatedLocations.remove(locationId);
+                                                                            Map<String, Object> updatesVolunteer = new HashMap<>();
+                                                                            updatesVolunteer.put("locationsVolunteered", updatedLocations);
+                                                                            updatesVolunteer.put("notifications", FieldValue.arrayUnion("Location Removed: " + locationName + " at " + currentDateTimeString));
 
-                                                            // Update array
-                                                            doc.getReference().update("locationsVolunteered", updatedLocations);
+                                                                            doc.getReference().update(updatesVolunteer);
+                                                                        }
+                                                                    }
 
-                                                        }
-
+                                                                }
+                                                            }
+                                                        });
+                                                        Log.d(TAG, "Location deleted successfully!");
+                                                        Toast.makeText(RegisterVolunteerActivity.this, "Remove Location Successfully", Toast.LENGTH_SHORT).show();
+                                                        startActivity(intentBack);
                                                     }
-                                                }
-                                            }
-                                        });
-                                        Log.d(TAG, "Location deleted successfully!");
-                                        Toast.makeText(RegisterVolunteerActivity.this, "Remove Location Successfully", Toast.LENGTH_SHORT).show();
-                                        startActivity(intentBack);
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Log.w(TAG, "Error deleting document", e);
-                                        Toast.makeText(RegisterVolunteerActivity.this, "Remove Location Failed", Toast.LENGTH_SHORT).show();
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Log.w(TAG, "Error deleting document", e);
+                                                        Toast.makeText(RegisterVolunteerActivity.this, "Remove Location Failed", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+
                                     }
                                 });
-
-                    }
-                });
-            }
+                            }
 
 //        Check if user have already registered to the location----------------------------
-            volunteerRef.get().addOnCompleteListener(task -> {
-                if(task.isSuccessful()) {
-                    DocumentSnapshot doc = task.getResult();
+                            volunteerRef.get().addOnCompleteListener(taskNew -> {
+                                if(task.isSuccessful()) {
+                                    DocumentSnapshot doc = task.getResult();
 
-                    ArrayList volunteeredLocationList = (ArrayList) doc.get("locationsVolunteered");
-                    if(volunteeredLocationList != null && volunteeredLocationList.contains(locationId)) {
-                        isDisplayRemove(true,true, isFinished, "You have already registered to this location");
-//                    Button for User Remove Registration ------------------------------------------
-                        removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
+                                    ArrayList volunteeredLocationList = (ArrayList) doc.get("locationsVolunteered");
+                                    if(volunteeredLocationList != null && volunteeredLocationList.contains(locationId)) {
+                                        isDisplayRemove(true,true, isFinished, "You have already registered to this location");
+
+
+//                        Button for User Remove Registration ------------------------------------------
+                                        removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View view) {
 //                          Remove user id from the location detail
-                                locationRef.update("volunteers", FieldValue.arrayRemove(userId))
-                                        .addOnSuccessListener(aVoid -> {
+                                                locationRef.update("volunteers", FieldValue.arrayRemove(userId))
+                                                        .addOnSuccessListener(aVoid -> {
 //                                        Toast.makeText(RegisterVolunteerActivity.this, "Removed Successfully to Location", Toast.LENGTH_SHORT).show();
-                                            Log.d(TAG, "Removed Successfully from the location detail");
+                                                            Log.d(TAG, "Removed Successfully from the location detail");
 
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
+                                                        });
+//                          Remove the location from the current User detail (volunteer location list)
+                                                volunteerRef.update("locationsVolunteered", FieldValue.arrayRemove(locationId))
+                                                        .addOnSuccessListener(aVoid -> {
+                                                            Log.d(TAG, "Removed Successfully from the user");
+                                                            Toast.makeText(RegisterVolunteerActivity.this, "Unregistered successfully", Toast.LENGTH_SHORT).show();
+                                                            volunteerRef.update("notifications", FieldValue.arrayUnion("Location Unregistered: " + locationName + " at " + currentDateTimeString))
+                                                                    .addOnSuccessListener(aVoidNew -> {
+                                                                        Log.d(TAG, "Notification updated Unregistered successfully");
+                                                                    })
+                                                                    .addOnFailureListener(e -> {
+                                                                        Log.d(TAG, "Notification updated Unregistered successfully");
+                                                                    });
+
+                                                            startActivity(intentBack);
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            Toast.makeText(RegisterVolunteerActivity.this, "Unregistered Failed to current User", Toast.LENGTH_SHORT).show();
+                                                        });
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    Toast.makeText(RegisterVolunteerActivity.this, "Error fetching user information", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            registerVolunteerButton.setOnClickListener(view -> {
+//          Update the location detail
+                                locationRef.update("volunteers", FieldValue.arrayUnion(userId))
+                                        .addOnSuccessListener(aVoid -> {
+                                            Log.d(TAG,"Register Successfully to Location");
+//                        Toast.makeText(RegisterVolunteerActivity.this, "Register Successfully to Location", Toast.LENGTH_SHORT).show();
                                         })
                                         .addOnFailureListener(e -> {
-                                            Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
+                                            Log.d(TAG,"Register Failed to Location");
+//                        Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
                                         });
-//                          Remove the location from the current User detail (volunteer location list)
-                                volunteerRef.update("locationsVolunteered", FieldValue.arrayRemove(locationId))
+//          Update the current User detail (volunteer location list)
+                                volunteerRef.update("locationsVolunteered", FieldValue.arrayUnion(locationId))
                                         .addOnSuccessListener(aVoid -> {
-                                            Log.d(TAG, "Removed Successfully from the user");
-                                            Toast.makeText(RegisterVolunteerActivity.this, "Unregistered successfully from current User", Toast.LENGTH_SHORT).show();
+                                            volunteerRef.update("notifications", FieldValue.arrayUnion("Location Registered: " + locationName + " at " + currentDateTimeString))
+                                                    .addOnSuccessListener(aVoidNew -> {
+                                                        Log.d(TAG, "Notification updated Registered successfully");
+                                                    })
+                                                    .addOnFailureListener(e -> {
+                                                        Log.d(TAG, "Notification updated Registered successfully");
+                                                    });
+                                            Toast.makeText(RegisterVolunteerActivity.this, "Register Successfully", Toast.LENGTH_SHORT).show();
                                             startActivity(intentBack);
                                         })
                                         .addOnFailureListener(e -> {
-                                            Toast.makeText(RegisterVolunteerActivity.this, "Unregistered Failed to current User", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(RegisterVolunteerActivity.this, "Register Failed", Toast.LENGTH_SHORT).show();
                                         });
-                            }
-                        });
-                    }
-                } else {
-                    Toast.makeText(RegisterVolunteerActivity.this, "Error fetching user information", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            registerVolunteerButton.setOnClickListener(view -> {
-//          Update the location detail
-                locationRef.update("volunteers", FieldValue.arrayUnion(userId))
-                        .addOnSuccessListener(aVoid -> {
-                            Log.d(TAG,"Register Successfully to Location");
-//                        Toast.makeText(RegisterVolunteerActivity.this, "Register Successfully to Location", Toast.LENGTH_SHORT).show();
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.d(TAG,"Register Failed to Location");
-//                        Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
-                        });
-//          Update the current User detail (volunteer location list)
-                volunteerRef.update("locationsVolunteered", FieldValue.arrayUnion(locationId))
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(RegisterVolunteerActivity.this, "Register Successfully", Toast.LENGTH_SHORT).show();
-                            startActivity(intentBack);
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(RegisterVolunteerActivity.this, "Register Failed", Toast.LENGTH_SHORT).show();
-                        });
-            });
+                            });
 
 
 //            Finished Button -------------------------------------------------------------------
-            finishedLocationButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    boolean isValid = true;
-                    int amountTrashCollected = 0;
-                    try {
-                        amountTrashCollected = Integer.parseInt(amountOfTrashEditText.getText().toString().trim());
-                    } catch (NumberFormatException e) {
-                        amountOfTrashEditText.setError("Invalid value Duration");
-                        isValid = false;
-                    }
-                    if (amountTrashCollected < 0) {
-                        amountOfTrashEditText.setError("Duration must be > 0");
-                        isValid = false;
-                    }
+                            finishedLocationButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    boolean isValid = true;
+                                    int amountTrashCollected = 0;
+                                    try {
+                                        amountTrashCollected = Integer.parseInt(amountOfTrashEditText.getText().toString().trim());
+                                    } catch (NumberFormatException e) {
+                                        amountOfTrashEditText.setError("Invalid value Duration");
+                                        isValid = false;
+                                    }
+                                    if (amountTrashCollected < 0) {
+                                        amountOfTrashEditText.setError("Duration must be > 0");
+                                        isValid = false;
+                                    }
 
-                    if(isValid){
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("amountTrashCollected", amountTrashCollected);
-                        updates.put("isFinished", true);
+                                    if(isValid){
+                                        Map<String, Object> updates = new HashMap<>();
+                                        updates.put("amountTrashCollected", amountTrashCollected);
+                                        updates.put("isFinished", true);
 
-                        locationRef.update(updates)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished successfully", Toast.LENGTH_SHORT).show();
-                                    Log.d(TAG, "Update successful!");
-                                    startActivity(intentBack);
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished failed", Toast.LENGTH_SHORT).show();
-                                    Log.e(TAG, "Update failed", e);
-                                });
-                    }
-                }
-            });
+                                        int finalAmountTrashCollected = amountTrashCollected;
+                                        locationRef.update(updates)
+                                                .addOnSuccessListener(aVoid -> {
+                                                    ownerRef.update("notifications", FieldValue.arrayUnion("Event Ended: " + locationName  + " at " + currentDateTimeString +  ", collected " + finalAmountTrashCollected + "kg"))
+                                                            .addOnSuccessListener(aVoidNew -> {
+                                                                Log.d(TAG, "Event Ended notification Owner Successfully");
+                                                            })
+                                                            .addOnFailureListener(e -> {
+                                                                Log.e(TAG, "Event Ended notification Owner Failed");
+                                                            });
 
-            getPathLocationButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    locationRef.get().addOnSuccessListener(documentSnapshot -> {
-                        String lat = documentSnapshot.getString("latitude");
-                        String lng = documentSnapshot.getString("longitude");
+
+                                                    usersRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                        @Override
+                                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                                                            if(task.isSuccessful()) {
+                                                                for(DocumentSnapshot doc : task.getResult()) {
+                                                                    // Get array for this user
+                                                                    ArrayList locations = (ArrayList) doc.get("locationsVolunteered");
+
+                                                                    // Remove locationId if exists
+                                                                    if(locations != null && locations.contains(locationId)) {
+
+                                                                        Map<String, Object> updatesVolunteer = new HashMap<>();
+                                                                        updatesVolunteer.put("notifications", FieldValue.arrayUnion("Event Ended: " + locationName  + " at " + currentDateTimeString +  ", collected " + finalAmountTrashCollected + "kg"));
+
+                                                                        doc.getReference().update(updatesVolunteer);
+                                                                    }
+
+                                                                }
+
+                                                            }
+                                                        }
+                                                    });
+
+
+                                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished successfully", Toast.LENGTH_SHORT).show();
+                                                    Log.d(TAG, "Update successful!");
+                                                    startActivity(intentBack);
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(RegisterVolunteerActivity.this, "Update finished failed", Toast.LENGTH_SHORT).show();
+                                                    Log.e(TAG, "Update failed", e);
+                                                });
+                                    }
+                                }
+                            });
+
+                            getPathLocationButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    locationRef.get().addOnSuccessListener(documentSnapshot -> {
+                                        String lat = documentSnapshot.getString("latitude");
+                                        String lng = documentSnapshot.getString("longitude");
 
 //                        double latitude = 0.0;
 //                        double longitude = 0.0;
@@ -307,18 +379,24 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
 //                            e.printStackTrace();
 //                        }
 
-                        Intent intentMap = new Intent(RegisterVolunteerActivity.this, MainActivity.class);
-                        intentMap.putExtra("fragment", "map");
-                        intentMap.putExtra("purpose", "getPath");
-                        intentMap.putExtra("latitude", lat);
-                        intentMap.putExtra("longitude", lng);
-                        startActivity(intentMap);
+                                        Intent intentMap = new Intent(RegisterVolunteerActivity.this, MainActivity.class);
+                                        intentMap.putExtra("fragment", "map");
+                                        intentMap.putExtra("purpose", "getPath");
+                                        intentMap.putExtra("latitude", lat);
+                                        intentMap.putExtra("longitude", lng);
+                                        startActivity(intentMap);
 
-                    });
+                                    });
+                                }
+                            });
+
+                        }
+                    }
                 }
-            });
+            }
+        });
 
-        }
+
 
         //        Back Button ------------------------------------------------
             registerVolunteerBackButton.setOnClickListener(new View.OnClickListener() {
@@ -359,6 +437,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                 registerVolunteerButton.setVisibility(View.VISIBLE);
             }
         }else{
+            getPathLocationButton.setVisibility(View.GONE);
             linearLayoutAmountTrash.setVisibility(View.GONE);
             finishedLocationButton.setVisibility(View.GONE);
             messageTextView.setText(text);

@@ -16,7 +16,6 @@ public class Location {
     private String latitude;
     private String longitude;
     private int amountTrashCollected;
-    private List<List> notifications;
 
     private boolean isFinished;
 
@@ -24,7 +23,6 @@ public class Location {
 
     public Location() {
         this.volunteers = new ArrayList<>();
-        this.notifications = new ArrayList<>();
         this.amountTrashCollected = new Integer(0);
         this.isFinished = false;
     }
@@ -40,7 +38,6 @@ public class Location {
         this.latitude = latitude;
         this.longitude = longitude;
         this.volunteers = new ArrayList<>();
-        this.notifications = new ArrayList<>();
         this.amountTrashCollected = new Integer(0);
         this.isFinished = false;
     }
@@ -51,14 +48,6 @@ public class Location {
 
     public void setAmountTrashCollected(int amountTrashCollected) {
         this.amountTrashCollected = amountTrashCollected;
-    }
-
-    public List<List> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(List<List> notifications) {
-        this.notifications = notifications;
     }
 
     public String getLocationName() {

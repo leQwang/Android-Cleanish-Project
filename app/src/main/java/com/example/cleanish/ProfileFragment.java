@@ -1,23 +1,35 @@
 package com.example.cleanish;
 
+import static android.content.ContentValues.TAG;
+
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.cleanish.model.Location;
 import com.example.cleanish.model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -38,16 +50,6 @@ public class ProfileFragment extends Fragment {
     public ProfileFragment() {
         // Required empty public constructor
     }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
 
     public static ProfileFragment newInstance(String param1, String param2) {
         ProfileFragment fragment = new ProfileFragment();
@@ -71,7 +73,17 @@ public class ProfileFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_profile, container);
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        Button logoutButton = view.findViewById(R.id.logoutButton);
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(requireContext(), LoginActivity.class);
+                startActivity(intent);
+                requireActivity().finish();
+            }
+        });
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser user = auth.getCurrentUser();
@@ -79,6 +91,7 @@ public class ProfileFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference userRef = db.collection("Users").document(uid);
+//        CollectionReference locationRef = db.collection("Locations");
 
         userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -91,10 +104,59 @@ public class ProfileFragment extends Fragment {
                         String role = user.getRole();
                         TextView profileFragmentEmail = view.findViewById(R.id.profileFragmentEmail);
                         TextView profileFragmentRole = view.findViewById(R.id.profileFragmentRole);
-                        //        TextView profileFragmentRole = view.findViewById(R.id.profileFragmentRole);
 
                         profileFragmentEmail.setText(email);
                         profileFragmentRole.setText(role);
+
+                        ListView locationOwnedList = view.findViewById(R.id.profileLocationOwned);
+                        ListView locationVolunteeredList = view.findViewById(R.id.profileLocationVolunteered);
+
+                        List<String> ownedLocationIds = user.getLocationsOwned();
+                        List<String> volunteeredLocationIds = user.getLocationsVolunteered();
+
+                        ArrayAdapter<String> adapterLocationOwned = new ArrayAdapter<>(
+                                requireActivity(),
+                                android.R.layout.simple_list_item_1
+                        );
+
+                        ArrayAdapter<String> adapterLocationVolunteered = new ArrayAdapter<>(
+                                requireActivity(),
+                                android.R.layout.simple_list_item_1
+                        );
+
+                        locationOwnedList.setAdapter(adapterLocationOwned);
+                        locationVolunteeredList.setAdapter(adapterLocationVolunteered);
+
+                        for(String id : ownedLocationIds) {
+                            DocumentReference locationRef = db.collection("Locations").document(id);
+                            locationRef.get().addOnCompleteListener( taskNew -> {
+                                Location location = taskNew.getResult().toObject(Location.class);
+                                List<String> volunteerList = location.getVolunteers();
+                                String name = location.getLocationName();
+
+                                if(name != null) {
+                                    adapterLocationOwned.add(name + " (" + volunteerList.size() + " volunteer)");
+                                } else {
+                                    Log.e(TAG, "null value");
+                                }
+                            });
+                        }
+                        adapterLocationOwned.notifyDataSetChanged();
+
+                        for(String id : volunteeredLocationIds) {
+                            DocumentReference locationRef = db.collection("Locations").document(id);
+                            locationRef.get().addOnCompleteListener( taskNew -> {
+                                Location location = taskNew.getResult().toObject(Location.class);
+                                String name = location.getLocationName();
+
+                                if(name != null) {
+                                    adapterLocationVolunteered.add(name);
+                                } else {
+                                    Log.e(TAG, "null value");
+                                }
+                            });
+                        }
+                        adapterLocationVolunteered.notifyDataSetChanged();
 
                     }
                 }
@@ -104,6 +166,6 @@ public class ProfileFragment extends Fragment {
 
 
 
-        return inflater.inflate(R.layout.fragment_profile, container, false);
+        return view;
     }
 }

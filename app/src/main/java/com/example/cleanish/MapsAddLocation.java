@@ -75,6 +75,7 @@ public class MapsAddLocation extends AppCompatActivity {
                 }
 
                 SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+                SimpleDateFormat formatterHour = new SimpleDateFormat("dd/MM/yyyy hh:mm");
                 String dateString = eventDateEditText.getText().toString();
 
                 Date eventDate = null;
@@ -141,16 +142,25 @@ public class MapsAddLocation extends AppCompatActivity {
                                 DocumentReference ownerRef = db.collection("Users").document(uid);
                                 ownerRef.update("locationsOwned", FieldValue.arrayUnion(locationId))
                                         .addOnSuccessListener(aVoid -> {
-                                            Toast.makeText(MapsAddLocation.this, "Added to owner detail", Toast.LENGTH_SHORT).show();
+                                            Log.d(TAG, "Added to owner location owned detail");
+
+                                            String formattedDateCreated = formatterHour.format(createdDate);
+                                            String newNotification = "Location Created: " + locationName + " at " + formattedDateCreated;
+                                            ownerRef.update("notifications", FieldValue.arrayUnion(newNotification))
+                                                    .addOnSuccessListener(aVoidNew -> {
+                                                        Toast.makeText(MapsAddLocation.this, "Location Successfully Created", Toast.LENGTH_SHORT).show();
+                                                        Intent intent = new Intent(MapsAddLocation.this, MainActivity.class);
+                                                        intent.putExtra("fragment", "map");
+                                                        startActivity(intent);
+                                                    })
+                                                    .addOnFailureListener(e -> {
+                                                        Toast.makeText(MapsAddLocation.this, "Failed adding notification", Toast.LENGTH_SHORT).show();
+                                                    });
+
                                         })
                                         .addOnFailureListener(e -> {
                                             Toast.makeText(MapsAddLocation.this, "Failed adding to owner detail", Toast.LENGTH_SHORT).show();
                                         });
-
-                                Toast.makeText(MapsAddLocation.this, "Location Successfully Created", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(MapsAddLocation.this, MainActivity.class);
-                                intent.putExtra("fragment", "map");
-                                startActivity(intent);
                             })
                             .addOnFailureListener(e -> {
                                 Log.w(TAG, "Error adding location document", e);

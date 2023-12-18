@@ -104,8 +104,7 @@ public class FilterFragment extends Fragment {
         isFilterDateStart = false;
         isFilterDateEnd = false;
 
-        initDatePickerBetween();
-        initDatePickerAnd();
+
     }
 
     @Override
@@ -113,9 +112,8 @@ public class FilterFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_filter, container, false);
 
-//        Fetch firestore data
-
-
+        initDatePickerBetween();
+        initDatePickerAnd();
 
 //      Search----------------------------------------------------------------------------------------
         listView = (ListView) view.findViewById(R.id.itemListView);
@@ -203,11 +201,11 @@ public class FilterFragment extends Fragment {
                             locationItemName.add(location.getLocationName());
                         }
                     }else{
-                        Toast.makeText(getContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
                     }
 
                 }else {
-                    Toast.makeText(getContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
                 }
 
             }else if(isSearch){
@@ -222,11 +220,11 @@ public class FilterFragment extends Fragment {
                             locationItemList.add(location);
                             locationItemName.add(location.getLocationName());
                     }else{
-                        Toast.makeText(getContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
                     }
 
                 }else {
-                    Toast.makeText(getContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Please finish filling in the date", Toast.LENGTH_SHORT).show();
                 }
             }else {
                 locationItemList.add(location);
@@ -235,7 +233,7 @@ public class FilterFragment extends Fragment {
 
         }
 
-        ListAdapter adapter = new ArrayAdapter<>(getContext(),
+        ListAdapter adapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, locationItemName);
 
         listView.setAdapter(adapter);
@@ -246,7 +244,7 @@ public class FilterFragment extends Fragment {
 
                 Location selectedLocation = locationItemList.get(position);
 
-                Intent intent = new Intent(getContext(), RegisterVolunteerActivity.class);
+                Intent intent = new Intent(requireContext(), RegisterVolunteerActivity.class);
 
                 String locationId = locationsMap.get(selectedLocation.getLocationName());
                 Log.d(TAG, "Location ID " + locationId + ", selected Location get name " + selectedLocation.getLocationName() + ", locationsMap: " + locationsMap.toString());

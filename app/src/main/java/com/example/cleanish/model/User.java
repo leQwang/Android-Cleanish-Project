@@ -14,15 +14,20 @@ public class User {
     private List<String> locationsOwned;
     private List<String> locationsVolunteered;
 
+    private List<String> notifications;
+
+
     public User() {
         this.locationsOwned = new ArrayList<>();
         this.locationsVolunteered = new ArrayList<>();
+        this.notifications = new ArrayList<>();
     }
 
     public User(String email) {
         this.email = email;
         this.locationsOwned = new ArrayList<>();
         this.locationsVolunteered = new ArrayList<>();
+        this.notifications = new ArrayList<>();
     }
 
     public User(String email, String password, String role) {
@@ -31,6 +36,7 @@ public class User {
         this.role = role;
         this.locationsOwned = new ArrayList<>();
         this.locationsVolunteered = new ArrayList<>();
+        this.notifications = new ArrayList<>();
     }
 
     public String getEmail() {
@@ -57,12 +63,27 @@ public class User {
         this.role = role;
     }
 
+    public void setLocationsOwned(List<String> locationsOwned) {
+        this.locationsOwned = locationsOwned;
+    }
+
     public List<String> getLocationsOwned() {
         return locationsOwned;
+    }
+
+    public void setLocationsVolunteered(List<String> locationsVolunteered) {
+        this.locationsVolunteered = locationsVolunteered;
     }
 
     public List<String> getLocationsVolunteered() {
         return locationsVolunteered;
     }
 
+    public List<String> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<String> notifications) {
+        this.notifications = notifications;
+    }
 }
