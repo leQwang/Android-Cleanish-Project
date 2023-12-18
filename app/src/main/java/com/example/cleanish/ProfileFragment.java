@@ -2,6 +2,7 @@ package com.example.cleanish;
 
 import static android.content.ContentValues.TAG;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -109,23 +110,13 @@ public class ProfileFragment extends Fragment {
                         profileFragmentRole.setText(role);
 
                         ListView locationOwnedList = view.findViewById(R.id.profileLocationOwned);
-                        ListView locationVolunteeredList = view.findViewById(R.id.profileLocationVolunteered);
-
                         List<String> ownedLocationIds = user.getLocationsOwned();
-                        List<String> volunteeredLocationIds = user.getLocationsVolunteered();
-
                         ArrayAdapter<String> adapterLocationOwned = new ArrayAdapter<>(
                                 requireActivity(),
                                 android.R.layout.simple_list_item_1
                         );
-
-                        ArrayAdapter<String> adapterLocationVolunteered = new ArrayAdapter<>(
-                                requireActivity(),
-                                android.R.layout.simple_list_item_1
-                        );
-
                         locationOwnedList.setAdapter(adapterLocationOwned);
-                        locationVolunteeredList.setAdapter(adapterLocationVolunteered);
+//                        Display Location List -----------------------------------------------------
 
                         for(String id : ownedLocationIds) {
                             DocumentReference locationRef = db.collection("Locations").document(id);
@@ -136,12 +127,46 @@ public class ProfileFragment extends Fragment {
 
                                 if(name != null) {
                                     adapterLocationOwned.add(name + " (" + volunteerList.size() + " volunteer)");
+                                    Log.d(TAG, "location id: " + id + ", location name: " + name);
                                 } else {
                                     Log.e(TAG, "null value");
                                 }
                             });
                         }
                         adapterLocationOwned.notifyDataSetChanged();
+
+                        locationOwnedList.setOnItemClickListener((parent, view, position, id) -> {
+                            String selectedLocationId = ownedLocationIds.get(position);
+                            Log.d(TAG, "selectedLocationId: " + selectedLocationId + ", position: " + position);
+
+                            DocumentReference locationRef = db.collection("Locations").document(selectedLocationId);
+                            locationRef.get().addOnCompleteListener(taskA -> {
+                                if (taskA.isSuccessful()) {
+                                    Location location = taskA.getResult().toObject(Location.class);
+
+                                    if (location != null) {
+                                        List<String> volunteerList = location.getVolunteers();
+                                        Log.d(TAG, "get LocationRef Size: " + volunteerList.size());
+
+                                        showVolunteerListDialog(volunteerList);
+                                    } else {
+                                        Log.e(TAG, "Location is null");
+                                    }
+                                } else {
+                                    Log.e(TAG, "Error getting location data", taskA.getException());
+                                }
+                            });
+                        });
+
+//                        Display Volunteer List -----------------------------------------------------
+                        ListView locationVolunteeredList = view.findViewById(R.id.profileLocationVolunteered);
+                        List<String> volunteeredLocationIds = user.getLocationsVolunteered();
+                        ArrayAdapter<String> adapterLocationVolunteered = new ArrayAdapter<>(
+                                requireActivity(),
+                                android.R.layout.simple_list_item_1
+                        );
+
+                        locationVolunteeredList.setAdapter(adapterLocationVolunteered);
 
                         for(String id : volunteeredLocationIds) {
                             DocumentReference locationRef = db.collection("Locations").document(id);
@@ -167,5 +192,20 @@ public class ProfileFragment extends Fragment {
 
 
         return view;
+    }
+
+    private void showVolunteerListDialog(List<String> volunteerList) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Volunteer List");
+
+        String[] volunteersArray = volunteerList.toArray(new String[0]);
+
+        builder.setItems(volunteersArray, (dialog, which) -> {
+        });
+
+        builder.setNegativeButton("Close", (dialog, which) -> dialog.dismiss());
+
+        // Show the dialog
+        builder.show();
     }
 }

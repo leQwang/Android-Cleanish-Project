@@ -21,7 +21,7 @@ import java.util.List;
 public class GetPathFromLocation extends AsyncTask<String, Void, PolylineOptions> {
 
     private String TAG = "GetPathFromLocation";
-    private String API_KEY = "AIzaSyAKQEsdTKd7k9IYn0Myo3vFtxQISwwb5c4";
+    private String API_KEY = "AIzaSyCo_xuvI_sVRjEWN6jVo_xWh0L0Bhz7us8";
     private LatLng source, destination;
     private DirectionPointListener resultCallback;
 

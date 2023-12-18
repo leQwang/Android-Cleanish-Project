@@ -43,14 +43,39 @@
                 android:ems="10"
                 android:hint="Location name"
                 android:inputType="text" />
-            <EditText
-                android:id="@+id/addLocationDate"
-                android:layout_width="wrap_content"
+<!--            <EditText-->
+<!--                android:id="@+id/addLocationDate"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginBottom="20dp"-->
+<!--                android:ems="10"-->
+<!--                android:hint="Event Date"-->
+<!--                android:inputType="date" />-->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                android:ems="10"
-                android:hint="Event Date"
-                android:inputType="date" />
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Event Date:"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="5dp"/>
+
+                <Button
+                    android:id="@+id/addLocationEventDatePicker"
+                    style="@style/Widget.AppCompat.Spinner"
+                    android:layout_width="167dp"
+                    android:layout_height="wrap_content"
+                    android:text="JAN 01 2023"
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+            </LinearLayout>
             <EditText
                 android:id="@+id/addLocationDuration"
                 android:layout_width="wrap_content"

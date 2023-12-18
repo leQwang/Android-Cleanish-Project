@@ -192,8 +192,6 @@ public class MapsFragment extends Fragment {
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
 
-//                    marker = mMap.addMarker(new MarkerOptions()
-//                            .position(currentUserLocation));
                 }
 
 
