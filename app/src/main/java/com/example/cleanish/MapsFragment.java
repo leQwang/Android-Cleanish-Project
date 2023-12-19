@@ -172,7 +172,7 @@ public class MapsFragment extends Fragment {
 
                         // Do something with lat and lng, e.g., update the map marker
                         LatLng locationDes = new LatLng(lat, lng);
-                        mMap.addMarker(new MarkerOptions().position(locationDes).title("Custom Marker"));
+//                        mMap.addMarker(new MarkerOptions().position(locationDes).title("Custom Marker"));
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(locationDes, 12));
 
                         Log.d(TAG, "currentUserLocation: " + currentUserLocation + ", and location: " + location);
@@ -187,7 +187,7 @@ public class MapsFragment extends Fragment {
                     Log.d(TAG, "currentUserLocation lat " + currentUserLocation.latitude + ", long " + currentUserLocation.longitude);
                     Log.d(TAG, "newUserLocation lat " + newUserLocation.latitude + ", long " + newUserLocation.longitude);
 
-                    marker = mMap.addMarker(new MarkerOptions().position(currentUserLocation).title("Marker in Current Location"));
+                    marker = mMap.addMarker(new MarkerOptions().position(newUserLocation).title("Marker in Current Location"));
 
                     currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));

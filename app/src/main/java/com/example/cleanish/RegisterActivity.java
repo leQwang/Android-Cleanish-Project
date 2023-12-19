@@ -25,7 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class RegisterActivity extends AppCompatActivity {
 
     private FirebaseAuth auth;
-    private EditText registerEmail, registerPassword;
+    private EditText registerEmail, registerPassword, registerPasswordConfirm;
     private Button toLoginButton, registerButton;
 
 
@@ -38,33 +38,35 @@ public class RegisterActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         registerEmail = findViewById(R.id.registerEmail);
         registerPassword = findViewById(R.id.registerPassword);
+        registerPasswordConfirm = findViewById(R.id.registerPasswordConfirm);
+
         toLoginButton = findViewById(R.id.toLoginButton);
         registerButton = findViewById(R.id.registerAccountButton);
-
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String email = registerEmail.getText().toString().trim();
                 String password = registerPassword.getText().toString().trim();
+                String confirmPassword = registerPasswordConfirm.getText().toString().trim();
 
                 if(email.isEmpty()){
                     registerEmail.setError("Email cannot be empty");
-//                    Toast.makeText(RegisterActivity.this, "Email cannot be empty", Toast.LENGTH_SHORT).show();
                 }else if (!email.contains("@")){
                     registerEmail.setError("Email invalid");
                 }
 
+                if(confirmPassword.isEmpty()){
+                    registerPasswordConfirm.setError("Please confirm your password");
+                }
+
                 if(password.isEmpty()){
                     registerPassword.setError("Password cannot be empty");
-//                    Toast.makeText(RegisterActivity.this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
-                } else if (password.toString().length() < 8) {
+                } else if (password.length() < 8) {
                     registerPassword.setError("Password must be at least 8 characters long");
-//                    Toast.makeText(RegisterActivity.this, "Password must be at least 8 characters long", Toast.LENGTH_SHORT).show();
 
-                } else {
-//                    String email = "hello3@gmail.com";
-//                    String password = "123456789";
-
+                } else if(!password.equals(confirmPassword)){
+                    registerPasswordConfirm.setError("Your passwords do not match");
+                }else {
                     auth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener(task -> {
                                 if(task.isSuccessful()) {

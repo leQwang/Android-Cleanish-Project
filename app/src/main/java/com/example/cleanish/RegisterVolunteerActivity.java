@@ -4,10 +4,16 @@ import static android.content.ContentValues.TAG;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -43,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RegisterVolunteerActivity extends AppCompatActivity {
+    private static final int NOTIFICATION_ID = 101;
 
     private Button registerVolunteerButton, registerVolunteerBackButton, removeVolunteerButton, finishedLocationButton, getPathLocationButton, saveUpdateLocationButton;
     private TextView messageTextView, locationOwnerTextView;
@@ -121,6 +128,8 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
         registerVolunteerBackButton = findViewById(R.id.registerVolunteerBackButton);
         finishedLocationButton = findViewById(R.id.finishedLocationButton);
         getPathLocationButton = findViewById(R.id.getPathVolunteerButton);
+        saveUpdateLocationButton = findViewById(R.id.savedLocationButton);
+
 
         isDisplayRemove(false,false, isFinished,false, "Register to become a volunteer");
 
@@ -145,14 +154,16 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                             if(userId.equals(locationOwner) || role.equals("Admin")){
                                 isDisplayRemove(true,false, isFinished,false, "You are the owner of this location");
 
+//                                Remove location ---------------------------------------------------------------------
                                 removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-//                          Remove the location from the Owner location list
+//                                  Remove the location from the Owner location list
                                         ownerRef.update("locationsOwned", FieldValue.arrayRemove(locationId))
                                                 .addOnSuccessListener(aVoid -> {
                                                     ownerRef.update("notifications", FieldValue.arrayUnion("Location Removed: " + locationName + " at " + currentDateTimeString))
                                                             .addOnSuccessListener(aVoidNew -> {
+                                                                sendStringNotification("You have successfully deleted a location");
                                                                 Log.d(TAG, "Removed location id Successfully from the user");
                                                             })
                                                             .addOnFailureListener(e -> {
@@ -215,8 +226,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
 
 //                            Admin can also edit the location detail -------------------------------------------------------------
                             if(role.equals("Admin")){
-                                isDisplayRemove(true,true, isFinished,true, "You have already registered to this location");
-                                saveUpdateLocationButton = findViewById(R.id.savedLocationButton);
+                                isDisplayRemove(true,false, isFinished,true, "");
                                 locationNameTextView.setEnabled(true);
                                 eventDateTextView.setEnabled(true);
                                 durationTextView.setEnabled(true);
@@ -280,7 +290,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                                                     Log.d(TAG, "Notification added");
                                                                 })
                                                                 .addOnFailureListener(e -> {
-                                                                    // Error
+                                                                    Log.d(TAG, "Notification failed");
                                                                 });
 
                                                         usersRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -316,7 +326,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                 });
                             }
 
-//        Check if user have already registered to the location (anyone can register and unregister from a location)----------------------------
+//                          Check if user have already registered to the location (anyone can register and unregister from a location)----------------------------
                             volunteerRef.get().addOnCompleteListener(taskNew -> {
                                 if(task.isSuccessful()) {
                                     DocumentSnapshot doc = task.getResult();
@@ -326,11 +336,11 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                         isDisplayRemove(true,true, isFinished,false, "You have already registered to this location");
 
 
-//                          Button for User Remove Registration ------------------------------------------
+//                                      Button for User Remove Registration ------------------------------------------
                                         removeVolunteerButton.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
-//                          Remove user id from the location detail ------------------------------------------
+//                                              Remove user id from the location detail ------------------------------------------
                                                 locationRef.update("volunteers", FieldValue.arrayRemove(userId))
                                                         .addOnSuccessListener(aVoid -> {
 //                                        Toast.makeText(RegisterVolunteerActivity.this, "Removed Successfully to Location", Toast.LENGTH_SHORT).show();
@@ -340,7 +350,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                                         .addOnFailureListener(e -> {
                                                             Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
                                                         });
-//                          Remove the location from the current User detail (volunteer location list)
+//                                              Remove the location from the current User detail (volunteer location list)
                                                 volunteerRef.update("locationsVolunteered", FieldValue.arrayRemove(locationId))
                                                         .addOnSuccessListener(aVoid -> {
                                                             Log.d(TAG, "Removed Successfully from the user");
@@ -348,11 +358,11 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                                             volunteerRef.update("notifications", FieldValue.arrayUnion("Location Unregistered: " + locationName + " at " + currentDateTimeString))
                                                                     .addOnSuccessListener(aVoidNew -> {
                                                                         Log.d(TAG, "Notification updated Unregistered successfully");
+                                                                        sendStringNotification("You have successfully Unregister");
                                                                     })
                                                                     .addOnFailureListener(e -> {
                                                                         Log.d(TAG, "Notification updated Unregistered successfully");
                                                                     });
-
                                                             startActivity(intentBack);
                                                         })
                                                         .addOnFailureListener(e -> {
@@ -382,6 +392,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                         .addOnSuccessListener(aVoid -> {
                                             volunteerRef.update("notifications", FieldValue.arrayUnion("Location Registered: " + locationName + " at " + currentDateTimeString))
                                                     .addOnSuccessListener(aVoidNew -> {
+                                                        sendStringNotification("You have successfully register volunteering to location");
                                                         Log.d(TAG, "Notification updated Registered successfully");
                                                     })
                                                     .addOnFailureListener(e -> {
@@ -518,13 +529,15 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
 
 
 //    Support function display text
-    private void isDisplayRemove(boolean bool, boolean isVolunteer, boolean isFinished, boolean isAdmin, String text){ //true to display text notifying the owner and registered user
+    private void isDisplayRemove(boolean isDisplayRemove, boolean isVolunteer, boolean isFinished, boolean isAdmin, String text){ //true to display text notifying the owner and registered user
         if(isAdmin){
-
+            saveUpdateLocationButton.setVisibility(View.VISIBLE);
+        }else {
+            saveUpdateLocationButton.setVisibility(View.GONE);
         }
 
         if(!isFinished){
-            if(bool){
+            if(isDisplayRemove){
                 if(isVolunteer){
                     removeVolunteerButton.setText("Unregister");
                     finishedLocationButton.setVisibility(View.GONE);
@@ -580,4 +593,31 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
         // You can define your own rules for the valid range of years
         return year >= 1900 && year <= 2100;
     }
+
+//    support notification
+private void sendStringNotification(String message) {
+    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+    if (notificationManager != null) {
+        // create notification channel ---------------------------------------------
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = "id";
+            CharSequence channelName = "Location";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        // create notification -----------------------------------------------
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "id")
+                .setSmallIcon(R.drawable.ic_notification_custom)
+                .setContentTitle("Detail has been updated")
+                .setContentText(message)
+                .setAutoCancel(true);
+
+        Notification notification = notificationBuilder.build();
+        notificationManager.notify(NOTIFICATION_ID, notification);
+    }
+}
+
 }

@@ -4,7 +4,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="home_fragment_title">Home</string>
-    <string name="home_fragment_about_us">Welcome to Cleanish, a community-driven platform dedicated to raising environmental campaigns through collective efforts and volunteering.</string>
+    <string name="home_fragment_about_us">Welcome to Cleanish, a community-driven platform dedicated to raising environmental campaigns through collective efforts and volunteering.\nWe appreciate every contribution in making the world a better place</string>
     <string name="home_fragment_map">- Click on the map to add a new location \n- Click on the icon to register and get path \n- The owner can remove or set the location event to finish</string>
     <string name="home_fragment_filter">User can filter out the location by name, date range, or both</string>
 

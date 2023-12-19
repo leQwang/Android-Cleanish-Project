@@ -129,7 +129,7 @@
                             android:id="@+id/homeNumberVolunteers"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10"
+                            android:text=""
                             android:textSize="24dp" />
                     </LinearLayout>
 
@@ -160,7 +160,7 @@
                             android:id="@+id/homeNumberLocations"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="10"
+                            android:text=""
                             android:textSize="24dp" />
                     </LinearLayout>
 

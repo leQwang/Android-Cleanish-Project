@@ -203,7 +203,7 @@ public class FilterFragment extends Fragment {
                             locationItemName.add(location.getLocationName());
                         }
                     }else{
-                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
                     }
 
                 }else {
@@ -222,7 +222,7 @@ public class FilterFragment extends Fragment {
                             locationItemList.add(location);
                             locationItemName.add(location.getLocationName());
                     }else{
-                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(requireContext(), "No Match result found", Toast.LENGTH_SHORT).show();
                     }
 
                 }else {

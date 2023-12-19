@@ -3,10 +3,18 @@ package com.example.cleanish;
 import static android.content.ContentValues.TAG;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -28,7 +36,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class MapsAddLocation extends AppCompatActivity {
-
+    private static final int NOTIFICATION_ID = 101;
     EditText locationNameEditText, eventDateEditText, durationEditText, latitudeEditText, longitudeEditText;
     Button eventDatePickerButton,addlocationButton, backButton;
     String latitude, longitude;
@@ -95,9 +103,21 @@ public class MapsAddLocation extends AppCompatActivity {
 //                String dateString = eventDateEditText.getText().toString();
 
                 Date currentDateUsingDate = new Date();
-                if (dateAnd.before(currentDateUsingDate)){
-                    eventDateEditText.setError("Can not set date in the past");
-                    isValid = false;
+                try {
+                    if (dateAnd != null) {
+                        if (eventDateEditText != null) {
+                            if (dateAnd.before(currentDateUsingDate)) {
+                                eventDateEditText.setError("Can not set date in the past");
+                                isValid = false;
+                            }
+                        } else {
+                            throw new NullPointerException("eventDateEditText is null");
+                        }
+                    } else {
+                        throw new NullPointerException("dateAnd is null");
+                    }
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
                 }
 
 //                Date eventDate = null;
@@ -167,6 +187,7 @@ public class MapsAddLocation extends AppCompatActivity {
                                             String newNotification = "Location Created: " + locationName + " at " + formattedDateCreated;
                                             ownerRef.update("notifications", FieldValue.arrayUnion(newNotification))
                                                     .addOnSuccessListener(aVoidNew -> {
+                                                        sendStringNotification(locationName);
                                                         Toast.makeText(MapsAddLocation.this, "Location Successfully Created", Toast.LENGTH_SHORT).show();
                                                         Intent intent = new Intent(MapsAddLocation.this, MainActivity.class);
                                                         intent.putExtra("fragment", "map");
@@ -259,4 +280,32 @@ public class MapsAddLocation extends AppCompatActivity {
             return "DEC";
         return "";
     };
+
+    private void sendStringNotification(String message) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (notificationManager != null) {
+
+            // Check if the device is running Android Oreo (API level 26) or higher
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Create Notification Channel
+                String channelId = "id";
+                CharSequence channelName = "Location";
+                int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                NotificationChannel channel = new NotificationChannel(channelId, channelName, importance);
+                notificationManager.createNotificationChannel(channel);
+            }
+
+            // create notification -----------------------------------------------
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "id")
+                    .setSmallIcon(R.drawable.ic_notification_custom)
+                    .setContentTitle("New Location Created")
+                    .setContentText("You have successfully added a new location: " + message)
+                    .setAutoCancel(true);
+
+            Notification notification = notificationBuilder.build();
+
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
+    }
 }
