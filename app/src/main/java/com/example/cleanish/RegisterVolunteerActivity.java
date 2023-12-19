@@ -34,6 +34,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.lang.reflect.Type;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -161,9 +162,9 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                                 .addOnFailureListener(e -> {
                                                     Log.e(TAG, "Removed location id Failed from the user");
                                                 });
-//                            Remove location from the collection
+//                                      Remove location from the collection
                                         locationRef.delete()
-//                            Remove the location from the Volunteer Location list
+//                                      Remove the location from the Volunteer Location list
                                                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
                                                     public void onSuccess(Void aVoid) {
@@ -212,14 +213,105 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                 });
                             }
 
-//                            Admin can also edit the location detail
+//                            Admin can also edit the location detail -------------------------------------------------------------
                             if(role.equals("Admin")){
                                 isDisplayRemove(true,true, isFinished,true, "You have already registered to this location");
                                 saveUpdateLocationButton = findViewById(R.id.savedLocationButton);
+                                locationNameTextView.setEnabled(true);
+                                eventDateTextView.setEnabled(true);
+                                durationTextView.setEnabled(true);
+                                String locationNameOriginal = locationNameTextView.getText().toString().trim();
+
                                 saveUpdateLocationButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        Log.d(TAG, "Save button pressed");
+                                        boolean isValid = true;
+
+                                        String locationName = locationNameTextView.getText().toString().trim();
+                                        if(locationName.isEmpty()){
+                                            locationNameTextView.setError("Location name required");
+                                            isValid = false;
+                                        }
+
+                                        String dateString = eventDateTextView.getText().toString();
+                                        Date eventDate = null;
+                                        SimpleDateFormat formatterNew = new SimpleDateFormat("dd/MM/yyyy");
+                                        try {
+                                            eventDate = formatterNew.parse(dateString);
+                                            Date currentDateUsingDate = new Date();
+                                            if (eventDate.before(currentDateUsingDate)){
+                                                eventDateTextView.setError("Can not set date in the past");
+                                                isValid = false;
+                                            }
+                                            Log.d(TAG, "Date Set: " + (eventDate != null ? eventDate.toString() : "null"));
+                                        } catch (ParseException e) {
+                                            eventDateTextView.setError("Incorrect Date format");
+                                            e.printStackTrace();
+                                            isValid = false;
+                                        }
+
+                                        int duration = 0;
+                                        try {
+                                            duration = Integer.parseInt(durationTextView.getText().toString().trim());
+                                        } catch (NumberFormatException e) {
+                                            durationTextView.setError("Invalid value Duration");
+                                            isValid = false;
+                                        }
+                                        if (duration <= 0) {
+                                            durationTextView.setError("Duration must be > 0");
+                                            isValid = false;
+                                        }
+
+                                        Map<String, Object> updates = new HashMap<>();
+
+                                        if(isValid) {
+
+                                            updates.put("locationName", locationName);
+                                            updates.put("duration", duration);
+                                            updates.put("eventDate", eventDate);
+
+                                            locationRef.update(updates)
+                                                    .addOnSuccessListener(aVoid -> {
+                                                        Toast.makeText(RegisterVolunteerActivity.this, "Update Successful", Toast.LENGTH_SHORT).show();
+                                                        String msg = "Location " + locationName + " detail has been updated";
+
+                                                        ownerRef.update("notifications", FieldValue.arrayUnion(msg))
+                                                                .addOnSuccessListener(aVoidOwner -> {
+                                                                    Log.d(TAG, "Notification added");
+                                                                })
+                                                                .addOnFailureListener(e -> {
+                                                                    // Error
+                                                                });
+
+                                                        usersRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                                                                if(task.isSuccessful()) {
+                                                                    for(DocumentSnapshot doc : task.getResult()) {
+
+                                                                        // Get array for this user
+                                                                        ArrayList locations = (ArrayList) doc.get("locationsVolunteered");
+
+                                                                        if(locations != null && locations.contains(locationId)) {
+
+                                                                            Map<String, Object> updates = new HashMap<>();
+                                                                            String newNotification = "Location " + locationName + " detail has been updated at " + currentDateTimeString;
+                                                                            updates.put("notifications", FieldValue.arrayUnion(newNotification));
+                                                                            doc.getReference().update(updates);
+                                                                        }
+                                                                    }
+
+                                                                }
+                                                            }
+                                                        });
+
+                                                    })
+                                                    .addOnFailureListener(e ->  {
+                                                        Toast.makeText(RegisterVolunteerActivity.this, "Update Failed", Toast.LENGTH_SHORT).show();
+                                                    });
+
+                                        }
                                     }
                                 });
                             }
@@ -275,7 +367,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                             });
 
                             registerVolunteerButton.setOnClickListener(view -> {
-//                      Update the location detail ------------------------------------------
+//                          Update the location detail ------------------------------------------
                                 locationRef.update("volunteers", FieldValue.arrayUnion(userId))
                                         .addOnSuccessListener(aVoid -> {
                                             Log.d(TAG,"Register Successfully to Location");
@@ -285,7 +377,7 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
                                             Log.d(TAG,"Register Failed to Location");
 //                                            Toast.makeText(RegisterVolunteerActivity.this, "Register Failed to Location", Toast.LENGTH_SHORT).show();
                                         });
-//                      Update the current User detail (volunteer location list) ------------------------------------------
+//                              Update the current User detail (volunteer location list) ------------------------------------------
                                 volunteerRef.update("locationsVolunteered", FieldValue.arrayUnion(locationId))
                                         .addOnSuccessListener(aVoid -> {
                                             volunteerRef.update("notifications", FieldValue.arrayUnion("Location Registered: " + locationName + " at " + currentDateTimeString))
@@ -463,5 +555,29 @@ public class RegisterVolunteerActivity extends AppCompatActivity {
             registerVolunteerButton.setVisibility(View.GONE);
         }
 
+    }
+
+//    support function validating the input day----------------------------
+    private static boolean isValidDay(int day, int month, int year) {
+        // Validate day based on the month and leap year if applicable
+        if (month >= 1 && month <= 12) {
+            int maxDay = 31; // Default max days in a month
+            if (month == 4 || month == 6 || month == 9 || month == 11) {
+                maxDay = 30;
+            } else if (month == 2) {
+                maxDay = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) ? 29 : 28;
+            }
+            return day >= 1 && day <= maxDay;
+        }
+        return false;
+    }
+
+    private static boolean isValidMonth(int month) {
+        return month >= 1 && month <= 12;
+    }
+
+    private static boolean isValidYear(int year) {
+        // You can define your own rules for the valid range of years
+        return year >= 1900 && year <= 2100;
     }
 }
