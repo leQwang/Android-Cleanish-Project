@@ -162,6 +162,7 @@ public class MapsFragment extends Fragment {
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(currentUserLocation));
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
 
+                    //draw path-------------------------------
                     Bundle arguments = getArguments();
                     if (arguments != null) {
                         double lat = arguments.getDouble("lat", 0.0);
@@ -194,7 +195,6 @@ public class MapsFragment extends Fragment {
 
                 }
 
-
                 if(marker != null) {
                     marker.setTag(0);
                 }
@@ -212,8 +212,6 @@ public class MapsFragment extends Fragment {
                 mMap.addPolyline(polyLine);
             }
         }).execute();
-
-
     }
 
     private class LoadLocationsTask extends AsyncTask<Void, Void, Void> {
@@ -254,21 +252,7 @@ public class MapsFragment extends Fragment {
 
                                 LatLng position = new LatLng(lat, lng);
 
-                                // Calculate distance
-//                                double distance = SphericalUtil.computeDistanceBetween(
-//                                        currentUserLocation, position);
-
-//                                Separate into three cases
-
                                 Marker marker = null;
-
-//                                1. The admin can view all the location
-
-
-//                                2. The volunteer can only view the location in the current 500 radius area
-//                                if(distance < 500000) {
-//                                  show marker within 500km
-//                                }
 
                                 if(uid.equals(loc.getLocationOwnerId())){
                                     // Create a marker with the tinted icon
@@ -285,8 +269,6 @@ public class MapsFragment extends Fragment {
                                             .title(loc.getLocationName()));
                                 }
 
-
-//                                3. The Owner can view all the location belongs to the owner
 
                                 // Add click listener to the marker
                                 if(marker != null) {
@@ -309,7 +291,7 @@ public class MapsFragment extends Fragment {
 
                                     Location clickedLoc = locations.get(index-1);
 
-                                    // Handle the click event, for example, start a new activity
+                                    // Handle the click event
                                     if (index != -1) {
 
                                             // Start a new activity with information from the clicked location (loc)
@@ -322,7 +304,7 @@ public class MapsFragment extends Fragment {
                                             intentNew.putExtra("isFinished", clickedLoc.getIsFinished());
                                             Log.d(TAG, "is finished " + String.valueOf(clickedLoc.getIsFinished()));
 
-                                            Date eventDate = clickedLoc.getEventDate(); // Assuming loc.getEventDate() returns a Date object
+                                            Date eventDate = clickedLoc.getEventDate();
                                             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                                             String formattedEventDate = dateFormat.format(eventDate);
                                             intentNew.putExtra("eventDate", formattedEventDate);
@@ -344,16 +326,32 @@ public class MapsFragment extends Fragment {
             return null;
         }
 
+//        private BitmapDescriptor bitmapDescriptorFromVector(Context context, int vectorResId) {
+//            Drawable vectorDrawable = ContextCompat.getDrawable(context, vectorResId);
+//            vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(),
+//                    vectorDrawable.getIntrinsicHeight());
+//            Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth()
+//                    , vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+//            Canvas canvas = new Canvas(bitmap);
+//            vectorDrawable.draw(canvas);
+//            return BitmapDescriptorFactory.fromBitmap(bitmap);
+//        }
+
         private BitmapDescriptor bitmapDescriptorFromVector(Context context, int vectorResId) {
             Drawable vectorDrawable = ContextCompat.getDrawable(context, vectorResId);
-            vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(),
-                    vectorDrawable.getIntrinsicHeight());
-            Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth()
-                    , vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-            vectorDrawable.draw(canvas);
-            return BitmapDescriptorFactory.fromBitmap(bitmap);
+
+            if (vectorDrawable != null) {
+                vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight());
+                Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+                vectorDrawable.draw(canvas);
+                return BitmapDescriptorFactory.fromBitmap(bitmap);
+            } else {
+                Log.e(TAG, "Vector drawable is null for resource ID: " + vectorResId);
+                return null;
+            }
         }
+
 
     }
 }

@@ -34,10 +34,32 @@
                 android:textStyle="bold"
                 app:layout_constraintVertical_bias="0.116" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Location Owner: "
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/registerVolunteerLocationOwner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quang Le"
+                    android:textSize="20sp"
+                    android:enabled="false"
+                    android:textColor="@color/black"/>
+            </LinearLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
                     android:gravity="center">
                     <TextView
                         android:layout_width="wrap_content"
@@ -46,32 +68,15 @@
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
-                    <TextView
+                    <EditText
                         android:id="@+id/registerVolunteerLocationName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Town Square"
-                        android:textSize="20sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Location Owner: "
                         android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/registerVolunteerLocationOwner"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quang Le"
-                        android:textSize="20sp" />
+                        android:enabled="false"
+                        android:inputType="text"
+                        android:textColor="@color/black"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -86,12 +91,15 @@
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
-                    <TextView
+                    <EditText
                         android:id="@+id/registerVolunteerEventDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="01/01/2023"
-                        android:textSize="20sp" />
+                        android:textSize="20sp"
+                        android:enabled="false"
+                        android:inputType="date"
+                        android:textColor="@color/black"/>
                 </LinearLayout>
 
 
@@ -103,17 +111,32 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Event Duration: "
+                        android:text="Event Duration (day): "
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
-                    <TextView
+                    <EditText
                         android:id="@+id/registerVolunteerDuration"
-                        android:layout_width="wrap_content"
+                        android:layout_width="40dp"
                         android:layout_height="wrap_content"
-                        android:text="1 day"
-                        android:textSize="20sp" />
+                        android:text="1"
+                        android:textSize="20sp"
+                        android:textAlignment="center"
+                        android:enabled="false"
+                        android:inputType="number"
+                        android:textColor="@color/black"/>
                 </LinearLayout>
+
+            <Button
+                android:id="@+id/savedLocationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:backgroundTint="@color/green"
+                android:text="Save"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginStart="5dp" />
 
 
 
@@ -140,6 +163,39 @@
                 android:textColor="@color/white"
                 app:layout_constraintVertical_bias="0.838" />
 
+            <LinearLayout
+                android:id="@+id/linearLayoutAmountTrash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="5dp"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Trash collected (in kg)"
+                    android:textStyle="bold"
+                    />
+
+                <EditText
+                    android:id="@+id/amountTrashEditText"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="number" />
+
+                <Button
+                    android:id="@+id/finishedLocationButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="56dp"
+                    android:backgroundTint="@color/green"
+                    android:text="Finish"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:layout_marginStart="5dp" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/getPathVolunteerButton"
                 android:layout_width="217dp"
@@ -151,43 +207,6 @@
                 android:textStyle="bold"
                 android:textColor="@color/white"
                 app:layout_constraintVertical_bias="0.838" />
-
-            <LinearLayout
-                android:id="@+id/linearLayoutAmountTrash"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="5dp"
-                android:gravity="center">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Enter number of Trash collected (in kg)"
-                    android:textStyle="bold"
-                    />
-
-                <EditText
-                    android:id="@+id/amountTrashEditText"
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="number" />
-
-
-            </LinearLayout>
-
-
-
-            <Button
-                android:id="@+id/finishedLocationButton"
-                android:layout_width="217dp"
-                android:layout_height="56dp"
-                android:backgroundTint="@color/green"
-                android:text="Finish"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/white" />
-
 
             <Button
                 android:id="@+id/removeVolunteerButton"

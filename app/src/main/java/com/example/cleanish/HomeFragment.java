@@ -83,19 +83,20 @@ public class HomeFragment extends Fragment {
         DocumentReference userRef = db.collection("Users").document(uid);
 
         userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
+                @Override
+                public void onComplete (@NonNull Task < DocumentSnapshot > task) {
+                    if (isAdded()){
+                        if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
                         User user = document.toObject(User.class);
 //                        String email = user.getEmail();
                         String role = user.getRole();
 
-                        if (role.equals("Volunteer")){
+                        if (role.equals("Volunteer")) {
                             isAdmin(false);
 
-                        }else {
+                        } else {
                             isAdmin(true);
 //                            Volunteer listview ---------------------------------------------------
 //                            volunteerListView = view.findViewById(R.id.homeVolunteerListView);
@@ -111,7 +112,7 @@ public class HomeFragment extends Fragment {
 
                             queryUser.get().addOnCompleteListener(taskA -> {
 
-                                for(DocumentSnapshot doc : taskA.getResult()) {
+                                for (DocumentSnapshot doc : taskA.getResult()) {
                                     usersList.add(doc.toObject(User.class));
                                     emailsList.add(doc.toObject(User.class).getEmail());
                                     Log.d(TAG, "User : " + doc.toObject(User.class).getEmail());
@@ -137,7 +138,7 @@ public class HomeFragment extends Fragment {
 
                             queryLocation.get().addOnCompleteListener(taskB -> {
 
-                                for(DocumentSnapshot doc : taskB.getResult()) {
+                                for (DocumentSnapshot doc : taskB.getResult()) {
                                     locationsList.add(doc.toObject(Location.class));
                                     locationNamesList.add(doc.toObject(Location.class).getLocationName());
                                     Log.d(TAG, "User : " + doc.toObject(Location.class).getLocationName());
@@ -156,6 +157,7 @@ public class HomeFragment extends Fragment {
                         }
                     }
                 }
+            }
             }
         });
 

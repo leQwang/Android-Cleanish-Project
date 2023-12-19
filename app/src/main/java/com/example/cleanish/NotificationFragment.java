@@ -101,7 +101,7 @@ public class NotificationFragment extends Fragment {
 
                         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                                 getActivity(),
-                                android.R.layout.simple_list_item_1,
+                                R.layout.list_item_custom,
                                 notificationsList
                         );
 

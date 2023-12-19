@@ -186,7 +186,9 @@ public class FilterFragment extends Fragment {
     }
 
     private void updateFilter(String s){
-
+        if (!isAdded()) {
+            return;
+        }
         ArrayList<Location> locationItemList = new ArrayList<>();
         ArrayList<String> locationItemName = new ArrayList<>();
 
