@@ -37,7 +37,7 @@ import java.util.Date;
 
 public class MapsAddLocation extends AppCompatActivity {
     private static final int NOTIFICATION_ID = 101;
-    EditText locationNameEditText, eventDateEditText, durationEditText, latitudeEditText, longitudeEditText;
+    EditText locationNameEditText, durationEditText, latitudeEditText, longitudeEditText;
     Button eventDatePickerButton,addlocationButton, backButton;
     String latitude, longitude;
 
@@ -105,16 +105,16 @@ public class MapsAddLocation extends AppCompatActivity {
                 Date currentDateUsingDate = new Date();
                 try {
                     if (dateAnd != null) {
-                        if (eventDateEditText != null) {
-                            if (dateAnd.before(currentDateUsingDate)) {
-                                eventDateEditText.setError("Can not set date in the past");
+                            if (!dateAnd.before(currentDateUsingDate)) {
+
+                            }else{
+                                Toast.makeText(MapsAddLocation.this, "You can not set date in the past", Toast.LENGTH_SHORT).show();
                                 isValid = false;
                             }
-                        } else {
-                            throw new NullPointerException("eventDateEditText is null");
-                        }
                     } else {
-                        throw new NullPointerException("dateAnd is null");
+                                isValid = false;
+                                Toast.makeText(MapsAddLocation.this, "You need to set a date", Toast.LENGTH_SHORT).show();
+                                throw new NullPointerException("dateAnd is null");
                     }
                 } catch (NullPointerException e) {
                     e.printStackTrace();
